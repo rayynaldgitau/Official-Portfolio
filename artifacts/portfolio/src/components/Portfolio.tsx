@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Terminal,
   Server,
@@ -26,6 +26,7 @@ import {
   Facebook,
   Link,
   Building2,
+  Eye,
 } from 'lucide-react';
 import ContactForm from './ContactForm';
 import { Button } from './ui/button';
@@ -326,6 +327,7 @@ export default function Portfolio() {
   const [experience, setExperience] = useState<StoredExperience[]>(loadExperience);
   const [certifications, setCertifications] = useState<StoredCert[]>(loadCerts);
   const [aboutData, setAboutData] = useState<AboutData>(loadAbout);
+  const [selectedProject, setSelectedProject] = useState<{ project: StoredProject; idx: number } | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -760,66 +762,146 @@ export default function Portfolio() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.15 }}
+                  whileHover={{ y: -4 }}
+                  onClick={() => setSelectedProject({ project, idx })}
+                  className="cursor-pointer"
                 >
-                  {project.url ? (
-                    <a href={project.url} target="_blank" rel="noopener noreferrer" className="block h-full">
-                      <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/50 transition-all overflow-hidden group h-full cursor-pointer">
-                        <div className="relative h-48 overflow-hidden">
-                          <img src={PROJECT_IMAGES[idx % PROJECT_IMAGES.length]} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
-                        </div>
-                        <CardHeader>
-                          <CardTitle className="text-xl text-white flex items-center justify-between">
-                            {project.title}
-                            <ExternalLink className="w-5 h-5 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </CardTitle>
-                          <CardDescription className="text-slate-400">{project.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {project.tags.map((tag) => (
-                              <Badge key={tag} variant="outline" className="border-cyan-400/30 text-cyan-400 text-xs">{tag}</Badge>
-                            ))}
-                          </div>
-                          <div className="flex items-center gap-2 pt-4 border-t border-slate-800 text-sm text-slate-400">
-                            <span className={`w-2 h-2 rounded-full ${project.status === 'active' ? 'bg-green-400' : 'bg-blue-400'}`} />
-                            {project.status === 'active' ? 'Active' : 'Completed'} · {project.views} views
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </a>
-                  ) : (
-                    <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/50 transition-all overflow-hidden group h-full">
-                      <div className="relative h-48 overflow-hidden">
-                        <img src={PROJECT_IMAGES[idx % PROJECT_IMAGES.length]} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+                  <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/50 transition-all overflow-hidden group h-full">
+                    <div className="relative h-48 overflow-hidden">
+                      <img src={PROJECT_IMAGES[idx % PROJECT_IMAGES.length]} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+                      <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-xs text-cyan-400 font-medium">View Details</span>
                       </div>
-                      <CardHeader>
-                        <CardTitle className="text-xl text-white flex items-center justify-between">
-                          {project.title}
-                          <ExternalLink className="w-5 h-5 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">{project.description}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {project.tags.map((tag) => (
-                            <Badge key={tag} variant="outline" className="border-cyan-400/30 text-cyan-400 text-xs">{tag}</Badge>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-2 pt-4 border-t border-slate-800 text-sm text-slate-400">
-                          <span className={`w-2 h-2 rounded-full ${project.status === 'active' ? 'bg-green-400' : 'bg-blue-400'}`} />
-                          {project.status === 'active' ? 'Active' : 'Completed'} · {project.views} views
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="text-xl text-white flex items-center justify-between">
+                        {project.title}
+                        <ExternalLink className="w-5 h-5 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </CardTitle>
+                      <CardDescription className="text-slate-400 line-clamp-2">{project.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {project.tags.map((tag) => (
+                          <Badge key={tag} variant="outline" className="border-cyan-400/30 text-cyan-400 text-xs">{tag}</Badge>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 pt-4 border-t border-slate-800 text-sm text-slate-400">
+                        <span className={`w-2 h-2 rounded-full ${project.status === 'active' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                        {project.status === 'active' ? 'Active' : 'Completed'} · {project.views} views
+                      </div>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               ))}
             </div>
           </motion.div>
         </div>
       </section>
+
+      {/* Project Detail Modal */}
+      <AnimatePresence>
+        {selectedProject && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedProject(null)}
+            />
+            {/* Modal */}
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto pointer-events-auto shadow-2xl shadow-cyan-500/10"
+                initial={{ scale: 0.92, y: 30, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.92, y: 30, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Image header */}
+                <div className="relative h-56 sm:h-64 overflow-hidden rounded-t-2xl">
+                  <img
+                    src={PROJECT_IMAGES[selectedProject.idx % PROJECT_IMAGES.length]}
+                    alt={selectedProject.project.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                  {/* Close button */}
+                  <button
+                    onClick={() => setSelectedProject(null)}
+                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-950/70 backdrop-blur-sm border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:border-cyan-400 transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  {/* Status badge */}
+                  <div className="absolute bottom-4 left-6 flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${selectedProject.project.status === 'active' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                    <span className="text-sm font-medium text-white">
+                      {selectedProject.project.status === 'active' ? 'Active' : 'Completed'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 sm:p-8">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">{selectedProject.project.title}</h2>
+                  <p className="text-slate-300 leading-relaxed mb-6">{selectedProject.project.description}</p>
+
+                  {/* Tags */}
+                  <div className="mb-6">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Technologies</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProject.project.tags.map(tag => (
+                        <Badge key={tag} variant="outline" className="border-cyan-400/40 text-cyan-300 bg-cyan-500/5 px-3 py-1 text-sm">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="flex items-center gap-6 py-4 border-t border-b border-slate-800 mb-6 text-sm text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-slate-500" />
+                      <span>{selectedProject.project.views.toLocaleString()} views</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 flex-wrap">
+                    {selectedProject.project.url && (
+                      <a
+                        href={selectedProject.project.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-all text-sm"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View Project
+                      </a>
+                    )}
+                    <button
+                      onClick={() => setSelectedProject(null)}
+                      className="flex items-center gap-2 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white px-5 py-2.5 rounded-lg transition-all text-sm"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Experience Section */}
       <section id="experience" className="py-16 md:py-32 bg-slate-950/50 relative">
