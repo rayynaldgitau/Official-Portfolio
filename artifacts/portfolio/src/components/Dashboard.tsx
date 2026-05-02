@@ -37,6 +37,7 @@ import {
   MapPin,
   Award,
   ExternalLink,
+  Info,
 } from 'lucide-react';
 import MessagesInbox from './MessagesInbox';
 import { Button } from './ui/button';
@@ -253,6 +254,39 @@ function loadCerts(): Cert[] {
   }
 }
 
+const ABOUT_KEY = 'portfolio_about';
+
+interface AboutData {
+  subtitle: string;
+  cards: { title: string; description: string }[];
+  stats: { yearsExperience: string; projectsDeployed: string; uptimePct: string };
+}
+
+const DEFAULT_ABOUT: AboutData = {
+  subtitle: 'Passionate DevOps engineer focused on building scalable infrastructure and streamlining deployment processes',
+  cards: [
+    { title: 'Infrastructure Expert', description: 'Designing and managing cloud infrastructure at scale with AWS, Azure, and GCP' },
+    { title: 'CI/CD Specialist', description: 'Building automated pipelines that enable rapid, reliable software delivery' },
+    { title: 'Automation Advocate', description: 'Creating infrastructure as code solutions that eliminate manual processes' },
+  ],
+  stats: { yearsExperience: '3+', projectsDeployed: '20+', uptimePct: '99.9%' },
+};
+
+function loadAbout(): AboutData {
+  try {
+    const stored = localStorage.getItem(ABOUT_KEY);
+    if (!stored) return DEFAULT_ABOUT;
+    const parsed = JSON.parse(stored);
+    return {
+      subtitle: parsed.subtitle ?? DEFAULT_ABOUT.subtitle,
+      cards: parsed.cards ?? DEFAULT_ABOUT.cards,
+      stats: { ...DEFAULT_ABOUT.stats, ...parsed.stats },
+    };
+  } catch {
+    return DEFAULT_ABOUT;
+  }
+}
+
 const recentActivity = [
   { action: 'Updated project', target: 'Cloud Infrastructure Automation', time: '2 hours ago' },
   { action: 'Added new skill', target: 'Prometheus', time: '5 hours ago' },
@@ -283,6 +317,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [newExp, setNewExp] = useState({ role: '', company: '', location: '', startDate: '', endDate: '', current: false, description: '', achievements: '' });
   const [newCert, setNewCert] = useState({ name: '', issuer: '', year: '', url: '' });
   const [editingCert, setEditingCert] = useState<Cert | null>(null);
+  const [aboutData, setAboutData] = useState<AboutData>(loadAbout);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -326,6 +362,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     localStorage.setItem(CERT_KEY, JSON.stringify(certs));
     window.dispatchEvent(new Event('certs-updated'));
   }, [certs]);
+
+  useEffect(() => {
+    localStorage.setItem(ABOUT_KEY, JSON.stringify(aboutData));
+    window.dispatchEvent(new Event('about-updated'));
+  }, [aboutData]);
 
   const [profileSettings, setProfileSettings] = useState(loadProfile);
   const [settingsSaved, setSettingsSaved] = useState(false);
@@ -481,6 +522,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     { id: 'skills', label: 'Skills', icon: Code },
     { id: 'experience', label: 'Experience', icon: History },
     { id: 'certifications', label: 'Certifications', icon: Award },
+    { id: 'about', label: 'About Section', icon: Info },
     { id: 'messages', label: 'Messages', icon: Inbox },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -488,9 +530,22 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex">
+      {/* Mobile backdrop */}
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <motion.aside
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-slate-900 border-r border-slate-800 transition-all duration-300 flex flex-col fixed left-0 top-0 bottom-0 z-40`}
+        className={`
+          bg-slate-900 border-r border-slate-800 flex flex-col fixed inset-y-0 left-0 z-40
+          transition-all duration-300
+          ${sidebarOpen ? 'w-64' : 'w-64 md:w-20'}
+          ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
         initial={false}
       >
         <div className="p-6 border-b border-slate-800">
@@ -506,18 +561,21 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 </div>
               </motion.div>
             )}
-            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="hover:bg-slate-800 text-slate-400 ml-auto">
+            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="hidden md:flex hover:bg-slate-800 text-slate-400 ml-auto">
               {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setMobileSidebarOpen(false)} className="md:hidden hover:bg-slate-800 text-slate-400 ml-auto">
+              <X className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 overflow-y-auto">
           <div className="space-y-1">
             {menuItems.map((item) => (
               <motion.button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => { setActiveTab(item.id); setMobileSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                   activeTab === item.id
                     ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-400/30'
@@ -526,7 +584,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 whileHover={{ x: sidebarOpen ? 4 : 0 }}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+                <span className={`text-sm font-medium md:${sidebarOpen ? 'block' : 'hidden'}`}>{item.label}</span>
               </motion.button>
             ))}
           </div>
@@ -539,14 +597,26 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             onClick={onLogout}
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
-            {sidebarOpen && <span className="ml-3 text-sm">Back to Portfolio</span>}
+            <span className={`ml-3 text-sm md:${sidebarOpen ? 'block' : 'hidden'}`}>Back to Portfolio</span>
           </Button>
         </div>
       </motion.aside>
 
       {/* Main Content */}
-      <main className={`flex-1 overflow-auto transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
-        <div className="p-8">
+      <main className={`flex-1 overflow-auto transition-all duration-300 ml-0 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+        {/* Mobile Header */}
+        <div className="md:hidden sticky top-0 z-20 bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => setMobileSidebarOpen(true)} className="hover:bg-slate-800 text-slate-400 p-1">
+            <Menu className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+              <Terminal className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="font-semibold text-sm text-white">Admin Dashboard</span>
+          </div>
+        </div>
+        <div className="p-4 md:p-8">
 
           {/* Overview Tab */}
           {activeTab === 'overview' && (
@@ -1154,6 +1224,99 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   </DialogContent>
                 </Dialog>
               )}
+            </motion.div>
+          )}
+
+          {/* About Section Tab */}
+          {activeTab === 'about' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold mb-2">About Section</h1>
+                <p className="text-slate-400">Edit the About Me section that appears on your portfolio</p>
+              </div>
+
+              <div className="max-w-2xl space-y-6">
+                {/* Subtitle */}
+                <Card className="bg-slate-900/50 border-slate-800">
+                  <CardHeader>
+                    <CardTitle className="text-white text-base">Section Subtitle</CardTitle>
+                    <CardDescription>The introductory paragraph shown below the "About Me" heading</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <textarea
+                      value={aboutData.subtitle}
+                      onChange={e => setAboutData(prev => ({ ...prev, subtitle: e.target.value }))}
+                      rows={3}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Stats */}
+                <Card className="bg-slate-900/50 border-slate-800">
+                  <CardHeader>
+                    <CardTitle className="text-white text-base">Stats</CardTitle>
+                    <CardDescription>Numbers displayed prominently in the About section</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {[
+                      { key: 'yearsExperience', label: 'Years Experience', placeholder: '3+' },
+                      { key: 'projectsDeployed', label: 'Projects Deployed', placeholder: '20+' },
+                      { key: 'uptimePct', label: 'Uptime Guarantee', placeholder: '99.9%' },
+                    ].map(({ key, label, placeholder }) => (
+                      <div key={key}>
+                        <label className="block text-sm text-slate-400 mb-1">{label}</label>
+                        <input
+                          type="text"
+                          value={aboutData.stats[key as keyof typeof aboutData.stats]}
+                          onChange={e => setAboutData(prev => ({ ...prev, stats: { ...prev.stats, [key]: e.target.value } }))}
+                          placeholder={placeholder}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {/* Feature Cards */}
+                <Card className="bg-slate-900/50 border-slate-800">
+                  <CardHeader>
+                    <CardTitle className="text-white text-base">Expertise Cards</CardTitle>
+                    <CardDescription>The three highlight cards shown below the stats</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {aboutData.cards.map((card, idx) => (
+                      <div key={idx} className="space-y-2 pb-4 border-b border-slate-800 last:border-0 last:pb-0">
+                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide">Card {idx + 1}</label>
+                        <input
+                          type="text"
+                          value={card.title}
+                          onChange={e => {
+                            const updated = [...aboutData.cards];
+                            updated[idx] = { ...updated[idx], title: e.target.value };
+                            setAboutData(prev => ({ ...prev, cards: updated }));
+                          }}
+                          placeholder="Title"
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        />
+                        <textarea
+                          value={card.description}
+                          onChange={e => {
+                            const updated = [...aboutData.cards];
+                            updated[idx] = { ...updated[idx], description: e.target.value };
+                            setAboutData(prev => ({ ...prev, cards: updated }));
+                          }}
+                          rows={2}
+                          placeholder="Description"
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+                        />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <p className="text-xs text-slate-500">Changes are saved and synced to your portfolio automatically as you type.</p>
+              </div>
             </motion.div>
           )}
 

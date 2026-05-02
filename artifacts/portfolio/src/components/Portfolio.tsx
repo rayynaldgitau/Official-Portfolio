@@ -279,6 +279,39 @@ function loadCerts(): StoredCert[] {
   }
 }
 
+const ABOUT_KEY = 'portfolio_about';
+
+interface AboutData {
+  subtitle: string;
+  cards: { title: string; description: string }[];
+  stats: { yearsExperience: string; projectsDeployed: string; uptimePct: string };
+}
+
+const DEFAULT_ABOUT: AboutData = {
+  subtitle: 'Passionate DevOps engineer focused on building scalable infrastructure and streamlining deployment processes',
+  cards: [
+    { title: 'Infrastructure Expert', description: 'Designing and managing cloud infrastructure at scale with AWS, Azure, and GCP' },
+    { title: 'CI/CD Specialist', description: 'Building automated pipelines that enable rapid, reliable software delivery' },
+    { title: 'Automation Advocate', description: 'Creating infrastructure as code solutions that eliminate manual processes' },
+  ],
+  stats: { yearsExperience: '3+', projectsDeployed: '20+', uptimePct: '99.9%' },
+};
+
+function loadAbout(): AboutData {
+  try {
+    const stored = localStorage.getItem(ABOUT_KEY);
+    if (!stored) return DEFAULT_ABOUT;
+    const parsed = JSON.parse(stored);
+    return {
+      subtitle: parsed.subtitle ?? DEFAULT_ABOUT.subtitle,
+      cards: parsed.cards ?? DEFAULT_ABOUT.cards,
+      stats: { ...DEFAULT_ABOUT.stats, ...parsed.stats },
+    };
+  } catch {
+    return DEFAULT_ABOUT;
+  }
+}
+
 export default function Portfolio() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -290,6 +323,7 @@ export default function Portfolio() {
   const [profile, setProfile] = useState(loadProfile);
   const [experience, setExperience] = useState<StoredExperience[]>(loadExperience);
   const [certifications, setCertifications] = useState<StoredCert[]>(loadCerts);
+  const [aboutData, setAboutData] = useState<AboutData>(loadAbout);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -308,6 +342,7 @@ export default function Portfolio() {
     const handleProfileUpdate = () => setProfile(loadProfile());
     const handleExperienceUpdate = () => setExperience(loadExperience());
     const handleCertsUpdate = () => setCertifications(loadCerts());
+    const handleAboutUpdate = () => setAboutData(loadAbout());
     window.addEventListener('portfolio-projects-updated', handleProjectsUpdate);
     window.addEventListener('portfolio-skills-updated', handleSkillsUpdate);
     window.addEventListener('resume-updated', handleResumeUpdate);
@@ -315,6 +350,7 @@ export default function Portfolio() {
     window.addEventListener('profile-updated', handleProfileUpdate);
     window.addEventListener('experience-updated', handleExperienceUpdate);
     window.addEventListener('certs-updated', handleCertsUpdate);
+    window.addEventListener('about-updated', handleAboutUpdate);
     return () => {
       window.removeEventListener('portfolio-projects-updated', handleProjectsUpdate);
       window.removeEventListener('portfolio-skills-updated', handleSkillsUpdate);
@@ -323,6 +359,7 @@ export default function Portfolio() {
       window.removeEventListener('profile-updated', handleProfileUpdate);
       window.removeEventListener('experience-updated', handleExperienceUpdate);
       window.removeEventListener('certs-updated', handleCertsUpdate);
+      window.removeEventListener('about-updated', handleAboutUpdate);
     };
   }, []);
 
@@ -344,7 +381,7 @@ export default function Portfolio() {
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <motion.button
             onClick={() => scrollTo('home')}
             className="flex items-center gap-2"
@@ -439,7 +476,7 @@ export default function Portfolio() {
           ))}
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -460,7 +497,7 @@ export default function Portfolio() {
             {/* Profile Picture */}
             <ProfilePicture name={profile.name} />
 
-            <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
               {profile.name}
             </h1>
 
@@ -536,38 +573,47 @@ export default function Portfolio() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-32 relative">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="about" className="py-16 md:py-32 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-center">
               About <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Me</span>
             </h2>
-            <p className="text-xl text-slate-300 text-center mb-16 max-w-3xl mx-auto">
-              Passionate DevOps engineer focused on building scalable infrastructure and streamlining deployment processes
+            <p className="text-lg md:text-xl text-slate-300 text-center mb-10 max-w-3xl mx-auto px-2">
+              {aboutData.subtitle}
             </p>
 
-            <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {/* Stats Row */}
+            <div className="flex flex-wrap justify-center gap-8 md:gap-16 mb-12">
               {[
-                {
-                  icon: Server,
-                  title: 'Infrastructure Expert',
-                  description: 'Designing and managing cloud infrastructure at scale with AWS, Azure, and GCP'
-                },
-                {
-                  icon: GitBranch,
-                  title: 'CI/CD Specialist',
-                  description: 'Building automated pipelines that enable rapid, reliable software delivery'
-                },
-                {
-                  icon: Code,
-                  title: 'Automation Advocate',
-                  description: 'Creating infrastructure as code solutions that eliminate manual processes'
-                }
+                { value: aboutData.stats.yearsExperience, label: 'Years Experience' },
+                { value: aboutData.stats.projectsDeployed, label: 'Projects Deployed' },
+                { value: aboutData.stats.uptimePct, label: 'Uptime Guarantee' },
+              ].map((stat, idx) => (
+                <motion.div
+                  key={idx}
+                  className="text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.15 }}
+                >
+                  <p className="text-4xl md:text-5xl font-bold text-cyan-400">{stat.value}</p>
+                  <p className="text-sm text-slate-400 mt-1">{stat.label}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-16">
+              {[
+                { icon: Server, ...aboutData.cards[0] },
+                { icon: GitBranch, ...aboutData.cards[1] },
+                { icon: Code, ...aboutData.cards[2] },
               ].map((item, idx) => (
                 <motion.div
                   key={idx}
@@ -633,8 +679,8 @@ export default function Portfolio() {
       </section>
 
       {/* Skills Section */}
-      <section id="skills" className="py-32 bg-slate-950/50 relative">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="skills" className="py-16 md:py-32 bg-slate-950/50 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -689,8 +735,8 @@ export default function Portfolio() {
       </section>
 
       {/* Projects Section */}
-      <section id="projects" className="py-32 relative">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="projects" className="py-16 md:py-32 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -751,8 +797,8 @@ export default function Portfolio() {
       </section>
 
       {/* Experience Section */}
-      <section id="experience" className="py-32 bg-slate-950/50 relative">
-        <div className="max-w-4xl mx-auto px-6">
+      <section id="experience" className="py-16 md:py-32 bg-slate-950/50 relative">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -815,8 +861,8 @@ export default function Portfolio() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-32 relative">
-        <div className="max-w-5xl mx-auto px-6">
+      <section id="contact" className="py-16 md:py-32 relative">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -875,7 +921,7 @@ export default function Portfolio() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-8">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-400">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-400">
           <div className="flex items-center gap-2">
             <Terminal className="w-4 h-4 text-cyan-400" />
             <span className="text-sm font-semibold text-white">{profile.name}</span>
