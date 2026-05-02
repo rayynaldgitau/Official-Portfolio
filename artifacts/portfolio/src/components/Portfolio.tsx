@@ -27,6 +27,8 @@ import {
   Link,
   Building2,
   Eye,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import ContactForm from './ContactForm';
 import { Button } from './ui/button';
@@ -390,6 +392,8 @@ export default function Portfolio() {
   const { scrollYProgress } = useScroll();
   const progressScaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   const typedBio = useTypewriter(profile.bio);
+  const [lightMode, setLightMode] = useState(() => localStorage.getItem('portfolio_theme') === 'light');
+  useEffect(() => { localStorage.setItem('portfolio_theme', lightMode ? 'light' : 'dark'); }, [lightMode]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -440,7 +444,7 @@ export default function Portfolio() {
   const navItems = ['Home', 'About', 'Skills', 'Projects', 'Experience', 'Contact'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+    <div className={`portfolio-root min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white${lightMode ? ' portfolio-light' : ''}`}>
       {/* Scroll progress bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 z-[200] origin-left"
@@ -475,6 +479,26 @@ export default function Portfolio() {
                 {item}
               </motion.button>
             ))}
+            <motion.button
+              onClick={() => setLightMode(m => !m)}
+              className="w-9 h-9 rounded-full border border-slate-700 hover:border-cyan-400 flex items-center justify-center text-slate-300 hover:text-cyan-400 transition-all"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title={lightMode ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={lightMode ? 'sun' : 'moon'}
+                  initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center justify-center"
+                >
+                  {lightMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </motion.span>
+              </AnimatePresence>
+            </motion.button>
             <Button
               variant="outline"
               size="sm"
@@ -518,6 +542,13 @@ export default function Portfolio() {
                 {item}
               </button>
             ))}
+            <button
+              onClick={() => setLightMode(m => !m)}
+              className="flex items-center gap-2 text-slate-300 hover:text-cyan-400 transition-colors py-2 text-sm"
+            >
+              {lightMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {lightMode ? 'Dark mode' : 'Light mode'}
+            </button>
           </motion.div>
         )}
       </motion.nav>
@@ -601,7 +632,7 @@ export default function Portfolio() {
             {/* Profile Picture */}
             <ProfilePicture name={profile.name} />
 
-            <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
+            <h1 className={`text-4xl sm:text-6xl md:text-8xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r ${lightMode ? 'from-slate-800 via-cyan-600 to-blue-600' : 'from-white via-cyan-200 to-blue-400'}`}>
               {profile.name}
             </h1>
 
@@ -1033,7 +1064,7 @@ export default function Portfolio() {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.2 }}
                 >
-                  <div className="absolute left-5 top-0 w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 border-4 border-slate-950" />
+                  <div className={`absolute left-5 top-0 w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 border-4 ${lightMode ? 'border-slate-100' : 'border-slate-950'}`} />
 
                   <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/30 transition-all">
                     <CardHeader>
