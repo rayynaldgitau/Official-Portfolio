@@ -53,6 +53,26 @@ import {
 import { Label } from './ui/label';
 
 const SOCIAL_LINKS_KEY = 'portfolio_social_links';
+const PROFILE_KEY = 'portfolio_profile';
+
+const DEFAULT_PROFILE = {
+  name: 'Raynald Gitau',
+  email: 'raynald.gitau@example.com',
+  title: 'DevOps Engineer',
+  bio: 'Building resilient infrastructure and automating the future.',
+  university: 'United States International University Africa',
+  github: 'https://github.com',
+  linkedin: 'https://linkedin.com',
+};
+
+function loadProfile() {
+  try {
+    const stored = localStorage.getItem(PROFILE_KEY);
+    return stored ? { ...DEFAULT_PROFILE, ...JSON.parse(stored) } : DEFAULT_PROFILE;
+  } catch {
+    return DEFAULT_PROFILE;
+  }
+}
 
 const SOCIAL_PLATFORMS = [
   { label: 'GitHub', value: 'github', icon: Github },
@@ -180,15 +200,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     window.dispatchEvent(new Event('portfolio-skills-updated'));
   }, [skills]);
 
-  const [profileSettings, setProfileSettings] = useState({
-    name: 'Raynald Gitau',
-    email: 'raynald.gitau@example.com',
-    title: 'DevOps Engineer',
-    bio: 'Building resilient infrastructure and automating the future.',
-    github: 'https://github.com',
-    linkedin: 'https://linkedin.com',
-  });
+  const [profileSettings, setProfileSettings] = useState(loadProfile);
   const [settingsSaved, setSettingsSaved] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profileSettings));
+    window.dispatchEvent(new Event('profile-updated'));
+  }, [profileSettings]);
 
   const PROFILE_PIC_KEY = 'portfolio_profile_pic_url';
   const RESUME_KEY = 'portfolio_resume_url';
@@ -869,7 +887,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                       <Input value={profileSettings.email} onChange={(e) => setProfileSettings({ ...profileSettings, email: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" type="email" />
                     </div>
                     <div>
-                      <Label className="text-white">Bio</Label>
+                      <Label className="text-white">University / School</Label>
+                      <Input value={profileSettings.university} onChange={(e) => setProfileSettings({ ...profileSettings, university: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" placeholder="e.g. MIT, Stanford..." />
+                    </div>
+                    <div>
+                      <Label className="text-white">Bio / Tagline</Label>
                       <Textarea value={profileSettings.bio} onChange={(e) => setProfileSettings({ ...profileSettings, bio: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" rows={3} />
                     </div>
                   </CardContent>

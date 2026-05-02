@@ -36,6 +36,24 @@ const SKILLS_KEY = 'portfolio_skills';
 const RESUME_KEY = 'portfolio_resume_url';
 const RESUME_NAME_KEY = 'portfolio_resume_name';
 const SOCIAL_LINKS_KEY = 'portfolio_social_links';
+const PROFILE_KEY = 'portfolio_profile';
+
+const DEFAULT_PROFILE = {
+  name: 'Raynald Gitau',
+  email: 'raynald.gitau@example.com',
+  title: 'DevOps Engineer',
+  bio: 'Building resilient infrastructure and automating the future.',
+  university: 'United States International University Africa',
+};
+
+function loadProfile() {
+  try {
+    const stored = localStorage.getItem(PROFILE_KEY);
+    return stored ? { ...DEFAULT_PROFILE, ...JSON.parse(stored) } : DEFAULT_PROFILE;
+  } catch {
+    return DEFAULT_PROFILE;
+  }
+}
 
 interface SocialLink {
   id: number;
@@ -125,7 +143,7 @@ function loadPortfolioSkills(): StoredSkill[] {
   }
 }
 
-function ProfilePicture() {
+function ProfilePicture({ name }: { name: string }) {
   const [url, setUrl] = useState<string | null>(() => localStorage.getItem(PROFILE_PIC_KEY));
 
   useEffect(() => {
@@ -144,7 +162,7 @@ function ProfilePicture() {
       <div className="relative">
         <div className="w-36 h-36 rounded-full ring-4 ring-cyan-400/60 ring-offset-4 ring-offset-slate-950 overflow-hidden shadow-2xl shadow-cyan-500/30 bg-slate-800 flex items-center justify-center">
           {url ? (
-            <img src={url} alt="Raynald Gitau" className="w-full h-full object-cover" />
+            <img src={url} alt={name} className="w-full h-full object-cover" />
           ) : (
             <div className="flex flex-col items-center gap-1 text-slate-500">
               <User className="w-14 h-14" />
@@ -217,6 +235,7 @@ export default function Portfolio() {
   const [resumeUrl, setResumeUrl] = useState<string | null>(() => localStorage.getItem(RESUME_KEY));
   const [resumeFileName, setResumeFileName] = useState<string | null>(() => localStorage.getItem(RESUME_NAME_KEY));
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(loadSocialLinks);
+  const [profile, setProfile] = useState(loadProfile);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -232,15 +251,18 @@ export default function Portfolio() {
       setResumeFileName(localStorage.getItem(RESUME_NAME_KEY));
     };
     const handleSocialUpdate = () => setSocialLinks(loadSocialLinks());
+    const handleProfileUpdate = () => setProfile(loadProfile());
     window.addEventListener('portfolio-projects-updated', handleProjectsUpdate);
     window.addEventListener('portfolio-skills-updated', handleSkillsUpdate);
     window.addEventListener('resume-updated', handleResumeUpdate);
     window.addEventListener('social-links-updated', handleSocialUpdate);
+    window.addEventListener('profile-updated', handleProfileUpdate);
     return () => {
       window.removeEventListener('portfolio-projects-updated', handleProjectsUpdate);
       window.removeEventListener('portfolio-skills-updated', handleSkillsUpdate);
       window.removeEventListener('resume-updated', handleResumeUpdate);
       window.removeEventListener('social-links-updated', handleSocialUpdate);
+      window.removeEventListener('profile-updated', handleProfileUpdate);
     };
   }, []);
 
@@ -371,24 +393,24 @@ export default function Portfolio() {
             >
               <Badge variant="outline" className="border-cyan-400 text-cyan-400 px-4 py-2 text-sm">
                 <Server className="w-4 h-4 mr-2" />
-                DevOps Engineer
+                {profile.title}
               </Badge>
             </motion.div>
 
             {/* Profile Picture */}
-            <ProfilePicture />
+            <ProfilePicture name={profile.name} />
 
             <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
-              Raynald Gitau
+              {profile.name}
             </h1>
 
             <p className="text-xl md:text-2xl text-slate-300 mb-4 max-w-3xl mx-auto">
-              Building resilient infrastructure and automating the future
+              {profile.bio}
             </p>
 
             <div className="flex items-center justify-center gap-2 text-slate-400 mb-8">
               <GraduationCap className="w-5 h-5" />
-              <p className="text-sm">United States International University Africa</p>
+              <p className="text-sm">{profile.university}</p>
             </div>
 
             <div className="flex items-center justify-center gap-4 mb-12 flex-wrap">
@@ -769,7 +791,7 @@ export default function Portfolio() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-400">
           <div className="flex items-center gap-2">
             <Terminal className="w-4 h-4 text-cyan-400" />
-            <span className="text-sm font-semibold text-white">Raynald Gitau</span>
+            <span className="text-sm font-semibold text-white">{profile.name}</span>
           </div>
           <p className="text-sm text-center">
             Built with React, Tailwind CSS, and Motion — © 2026
