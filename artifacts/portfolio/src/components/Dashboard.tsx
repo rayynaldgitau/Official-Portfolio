@@ -33,6 +33,8 @@ import {
   Instagram,
   Facebook,
   Link,
+  History,
+  MapPin,
 } from 'lucide-react';
 import MessagesInbox from './MessagesInbox';
 import { Button } from './ui/button';
@@ -168,6 +170,62 @@ function loadSkills(): Skill[] {
   }
 }
 
+interface Experience {
+  id: number;
+  role: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+  achievements: string[];
+}
+
+const EXPERIENCE_KEY = 'portfolio_experience';
+
+const DEFAULT_EXPERIENCE: Experience[] = [
+  {
+    id: 1,
+    role: 'DevOps Engineer',
+    company: 'Tech Solutions Inc.',
+    location: 'Nairobi, Kenya',
+    startDate: '2024',
+    endDate: '',
+    current: true,
+    description: 'Leading cloud infrastructure initiatives and automation projects.',
+    achievements: [
+      'Reduced infrastructure costs by 35% through optimization',
+      'Implemented GitOps practices across 20+ microservices',
+      'Led migration of monolith to microservices architecture',
+    ],
+  },
+  {
+    id: 2,
+    role: 'Junior DevOps Engineer',
+    company: 'Cloud Innovations Ltd.',
+    location: 'Nairobi, Kenya',
+    startDate: '2022',
+    endDate: '2024',
+    current: false,
+    description: 'Managed containerization and deployment pipelines.',
+    achievements: [
+      'Migrated 15 legacy applications to containerized environments',
+      'Achieved 99.95% uptime for critical production systems',
+      'Automated routine ops tasks saving 10+ hours per week',
+    ],
+  },
+];
+
+function loadExperience(): Experience[] {
+  try {
+    const stored = localStorage.getItem(EXPERIENCE_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_EXPERIENCE;
+  } catch {
+    return DEFAULT_EXPERIENCE;
+  }
+}
+
 const recentActivity = [
   { action: 'Updated project', target: 'Cloud Infrastructure Automation', time: '2 hours ago' },
   { action: 'Added new skill', target: 'Prometheus', time: '5 hours ago' },
@@ -184,12 +242,16 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [projects, setProjects] = useState<Project[]>(loadProjects);
   const [skills, setSkills] = useState<Skill[]>(loadSkills);
+  const [experiences, setExperiences] = useState<Experience[]>(loadExperience);
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const [isAddingExp, setIsAddingExp] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingExp, setEditingExp] = useState<Experience | null>(null);
 
   const [newProject, setNewProject] = useState({ title: '', description: '', tags: '' });
   const [newSkill, setNewSkill] = useState({ name: '', level: '80', category: '' });
+  const [newExp, setNewExp] = useState({ role: '', company: '', location: '', startDate: '', endDate: '', current: false, description: '', achievements: '' });
 
   useEffect(() => {
     localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
@@ -200,6 +262,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     localStorage.setItem(SKILLS_KEY, JSON.stringify(skills));
     window.dispatchEvent(new Event('portfolio-skills-updated'));
   }, [skills]);
+
+  useEffect(() => {
+    localStorage.setItem(EXPERIENCE_KEY, JSON.stringify(experiences));
+    window.dispatchEvent(new Event('experience-updated'));
+  }, [experiences]);
 
   const [profileSettings, setProfileSettings] = useState(loadProfile);
   const [settingsSaved, setSettingsSaved] = useState(false);
@@ -353,6 +420,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: Briefcase },
     { id: 'skills', label: 'Skills', icon: Code },
+    { id: 'experience', label: 'Experience', icon: History },
     { id: 'messages', label: 'Messages', icon: Inbox },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -709,6 +777,191 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   </motion.div>
                 ))}
               </div>
+            </motion.div>
+          )}
+
+          {/* Experience Tab */}
+          {activeTab === 'experience' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Work Experience</h1>
+                  <p className="text-slate-400">Manage your job history ({experiences.length} entries)</p>
+                </div>
+                <Dialog open={isAddingExp} onOpenChange={setIsAddingExp}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Role
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Add Work Experience</DialogTitle>
+                      <DialogDescription className="text-slate-400">Fill in the details for this role.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="col-span-2">
+                          <Label>Job Title / Role</Label>
+                          <Input value={newExp.role} onChange={e => setNewExp({ ...newExp, role: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="e.g. DevOps Engineer" />
+                        </div>
+                        <div className="col-span-2">
+                          <Label>Company</Label>
+                          <Input value={newExp.company} onChange={e => setNewExp({ ...newExp, company: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="e.g. Acme Corp" />
+                        </div>
+                        <div className="col-span-2">
+                          <Label>Location</Label>
+                          <Input value={newExp.location} onChange={e => setNewExp({ ...newExp, location: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="e.g. Nairobi, Kenya" />
+                        </div>
+                        <div>
+                          <Label>Start Date</Label>
+                          <Input value={newExp.startDate} onChange={e => setNewExp({ ...newExp, startDate: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="e.g. 2022" />
+                        </div>
+                        <div>
+                          <Label>End Date</Label>
+                          <Input value={newExp.endDate} onChange={e => setNewExp({ ...newExp, endDate: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="e.g. 2024" disabled={newExp.current} />
+                        </div>
+                        <div className="col-span-2 flex items-center gap-2">
+                          <input type="checkbox" id="current-new" checked={newExp.current} onChange={e => setNewExp({ ...newExp, current: e.target.checked, endDate: e.target.checked ? '' : newExp.endDate })} className="w-4 h-4 rounded accent-cyan-400" />
+                          <Label htmlFor="current-new" className="cursor-pointer">I currently work here</Label>
+                        </div>
+                        <div className="col-span-2">
+                          <Label>Description</Label>
+                          <Textarea value={newExp.description} onChange={e => setNewExp({ ...newExp, description: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" rows={2} placeholder="Brief role summary..." />
+                        </div>
+                        <div className="col-span-2">
+                          <Label>Key Achievements <span className="text-slate-500 font-normal">(one per line)</span></Label>
+                          <Textarea value={newExp.achievements} onChange={e => setNewExp({ ...newExp, achievements: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" rows={4} placeholder={"Reduced costs by 30%\nLed team of 5 engineers\nImplemented CI/CD pipeline"} />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddingExp(false)} className="border-slate-700 text-white hover:bg-slate-800">Cancel</Button>
+                      <Button onClick={() => {
+                        if (newExp.role && newExp.company) {
+                          setExperiences([...experiences, {
+                            id: Date.now(),
+                            role: newExp.role,
+                            company: newExp.company,
+                            location: newExp.location,
+                            startDate: newExp.startDate,
+                            endDate: newExp.current ? '' : newExp.endDate,
+                            current: newExp.current,
+                            description: newExp.description,
+                            achievements: newExp.achievements.split('\n').map(a => a.trim()).filter(Boolean),
+                          }]);
+                          setNewExp({ role: '', company: '', location: '', startDate: '', endDate: '', current: false, description: '', achievements: '' });
+                          setIsAddingExp(false);
+                        }
+                      }} className="bg-gradient-to-r from-cyan-500 to-blue-600">Add Experience</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="space-y-4">
+                {experiences.map((exp) => (
+                  <Card key={exp.id} className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/20 transition-all">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <h3 className="font-semibold text-white text-lg">{exp.role}</h3>
+                            {exp.current && <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-400/30 text-xs">Current</Badge>}
+                          </div>
+                          <p className="text-cyan-400 font-medium">{exp.company}</p>
+                          <div className="flex items-center gap-3 mt-1 text-slate-400 text-sm">
+                            {exp.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{exp.location}</span>}
+                            <span>{exp.startDate}{exp.current ? ' – Present' : exp.endDate ? ` – ${exp.endDate}` : ''}</span>
+                          </div>
+                          {exp.description && <p className="text-slate-400 text-sm mt-2">{exp.description}</p>}
+                          {exp.achievements.length > 0 && (
+                            <ul className="mt-2 space-y-1">
+                              {exp.achievements.slice(0, 2).map((a, i) => (
+                                <li key={i} className="text-slate-400 text-xs flex items-start gap-1.5">
+                                  <span className="text-cyan-400 mt-0.5">•</span>{a}
+                                </li>
+                              ))}
+                              {exp.achievements.length > 2 && <li className="text-slate-500 text-xs">+{exp.achievements.length - 2} more achievements</li>}
+                            </ul>
+                          )}
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-slate-800 text-slate-400" onClick={() => setEditingExp({ ...exp })}>
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:text-red-400 text-slate-400" onClick={() => setExperiences(experiences.filter(e => e.id !== exp.id))}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {experiences.length === 0 && (
+                  <div className="text-center py-16 text-slate-500">
+                    <History className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                    <p>No work experience added yet.</p>
+                    <p className="text-sm mt-1">Click "Add Role" to get started.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Edit Experience Dialog */}
+              {editingExp && (
+                <Dialog open={!!editingExp} onOpenChange={(open) => { if (!open) setEditingExp(null); }}>
+                  <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-lg max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Edit Experience</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="col-span-2">
+                          <Label>Job Title / Role</Label>
+                          <Input value={editingExp.role} onChange={e => setEditingExp({ ...editingExp, role: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" />
+                        </div>
+                        <div className="col-span-2">
+                          <Label>Company</Label>
+                          <Input value={editingExp.company} onChange={e => setEditingExp({ ...editingExp, company: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" />
+                        </div>
+                        <div className="col-span-2">
+                          <Label>Location</Label>
+                          <Input value={editingExp.location} onChange={e => setEditingExp({ ...editingExp, location: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" />
+                        </div>
+                        <div>
+                          <Label>Start Date</Label>
+                          <Input value={editingExp.startDate} onChange={e => setEditingExp({ ...editingExp, startDate: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" />
+                        </div>
+                        <div>
+                          <Label>End Date</Label>
+                          <Input value={editingExp.endDate} onChange={e => setEditingExp({ ...editingExp, endDate: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" disabled={editingExp.current} />
+                        </div>
+                        <div className="col-span-2 flex items-center gap-2">
+                          <input type="checkbox" id="current-edit" checked={editingExp.current} onChange={e => setEditingExp({ ...editingExp, current: e.target.checked, endDate: e.target.checked ? '' : editingExp.endDate })} className="w-4 h-4 rounded accent-cyan-400" />
+                          <Label htmlFor="current-edit" className="cursor-pointer">I currently work here</Label>
+                        </div>
+                        <div className="col-span-2">
+                          <Label>Description</Label>
+                          <Textarea value={editingExp.description} onChange={e => setEditingExp({ ...editingExp, description: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" rows={2} />
+                        </div>
+                        <div className="col-span-2">
+                          <Label>Key Achievements <span className="text-slate-500 font-normal">(one per line)</span></Label>
+                          <Textarea value={editingExp.achievements.join('\n')} onChange={e => setEditingExp({ ...editingExp, achievements: e.target.value.split('\n') })} className="bg-slate-800 border-slate-700 mt-1" rows={4} />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setEditingExp(null)} className="border-slate-700 text-white hover:bg-slate-800">Cancel</Button>
+                      <Button onClick={() => {
+                        setExperiences(experiences.map(e => e.id === editingExp.id ? { ...editingExp, achievements: editingExp.achievements.map(a => a.trim()).filter(Boolean) } : e));
+                        setEditingExp(null);
+                      }} className="bg-gradient-to-r from-cyan-500 to-blue-600">Save Changes</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </motion.div>
           )}
 

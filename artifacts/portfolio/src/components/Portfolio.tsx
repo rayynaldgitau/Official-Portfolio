@@ -198,30 +198,61 @@ function getSkillIcon(name: string) {
   return Server;
 }
 
-const experience = [
+const EXPERIENCE_KEY = 'portfolio_experience';
+
+interface StoredExperience {
+  id: number;
+  role: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+  achievements: string[];
+}
+
+const DEFAULT_EXPERIENCE: StoredExperience[] = [
   {
+    id: 1,
     role: 'DevOps Engineer',
     company: 'Tech Solutions Inc.',
-    period: '2024 - Present',
+    location: 'Nairobi, Kenya',
+    startDate: '2024',
+    endDate: '',
+    current: true,
     description: 'Leading cloud infrastructure initiatives and automation projects.',
     achievements: [
       'Reduced infrastructure costs by 35% through optimization',
       'Implemented GitOps practices across 20+ microservices',
-      'Led migration of monolith to microservices architecture'
-    ]
+      'Led migration of monolith to microservices architecture',
+    ],
   },
   {
+    id: 2,
     role: 'Junior DevOps Engineer',
     company: 'Cloud Innovations Ltd.',
-    period: '2022 - 2024',
+    location: 'Nairobi, Kenya',
+    startDate: '2022',
+    endDate: '2024',
+    current: false,
     description: 'Managed containerization and deployment pipelines.',
     achievements: [
       'Migrated 15 legacy applications to containerized environments',
       'Achieved 99.95% uptime for critical production systems',
-      'Automated routine ops tasks saving 10+ hours per week'
-    ]
-  }
+      'Automated routine ops tasks saving 10+ hours per week',
+    ],
+  },
 ];
+
+function loadExperience(): StoredExperience[] {
+  try {
+    const stored = localStorage.getItem(EXPERIENCE_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_EXPERIENCE;
+  } catch {
+    return DEFAULT_EXPERIENCE;
+  }
+}
 
 const certifications = [
   { name: 'AWS Solutions Architect', issuer: 'Amazon Web Services', year: '2024' },
@@ -238,6 +269,7 @@ export default function Portfolio() {
   const [resumeFileName, setResumeFileName] = useState<string | null>(() => localStorage.getItem(RESUME_NAME_KEY));
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(loadSocialLinks);
   const [profile, setProfile] = useState(loadProfile);
+  const [experience, setExperience] = useState<StoredExperience[]>(loadExperience);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -254,17 +286,20 @@ export default function Portfolio() {
     };
     const handleSocialUpdate = () => setSocialLinks(loadSocialLinks());
     const handleProfileUpdate = () => setProfile(loadProfile());
+    const handleExperienceUpdate = () => setExperience(loadExperience());
     window.addEventListener('portfolio-projects-updated', handleProjectsUpdate);
     window.addEventListener('portfolio-skills-updated', handleSkillsUpdate);
     window.addEventListener('resume-updated', handleResumeUpdate);
     window.addEventListener('social-links-updated', handleSocialUpdate);
     window.addEventListener('profile-updated', handleProfileUpdate);
+    window.addEventListener('experience-updated', handleExperienceUpdate);
     return () => {
       window.removeEventListener('portfolio-projects-updated', handleProjectsUpdate);
       window.removeEventListener('portfolio-skills-updated', handleSkillsUpdate);
       window.removeEventListener('resume-updated', handleResumeUpdate);
       window.removeEventListener('social-links-updated', handleSocialUpdate);
       window.removeEventListener('profile-updated', handleProfileUpdate);
+      window.removeEventListener('experience-updated', handleExperienceUpdate);
     };
   }, []);
 
@@ -697,7 +732,7 @@ export default function Portfolio() {
 
               {experience.map((exp, idx) => (
                 <motion.div
-                  key={idx}
+                  key={exp.id}
                   className="relative pl-20 pb-16"
                   initial={{ opacity: 0, x: -30 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -712,10 +747,16 @@ export default function Portfolio() {
                         <div>
                           <CardTitle className="text-2xl text-white">{exp.role}</CardTitle>
                           <p className="text-cyan-400 mt-1 font-medium">{exp.company}</p>
+                          {exp.location && <p className="text-slate-500 text-sm mt-0.5">{exp.location}</p>}
                         </div>
-                        <Badge variant="outline" className="border-slate-700 text-slate-300">
-                          {exp.period}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge variant="outline" className="border-slate-700 text-slate-300">
+                            {exp.startDate}{exp.current ? ' – Present' : exp.endDate ? ` – ${exp.endDate}` : ''}
+                          </Badge>
+                          {exp.current && (
+                            <span className="text-xs text-cyan-400 font-medium">Current Role</span>
+                          )}
+                        </div>
                       </div>
                       <CardDescription className="text-slate-400">{exp.description}</CardDescription>
                     </CardHeader>
