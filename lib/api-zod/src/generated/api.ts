@@ -14,3 +14,56 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Submits a contact form message from the portfolio
+ * @summary Send a contact message
+ */
+export const SendMessageBody = zod.object({
+  name: zod.string(),
+  email: zod.string(),
+  subject: zod.string(),
+  message: zod.string(),
+});
+
+/**
+ * Returns all contact form messages (admin only)
+ * @summary Get all messages
+ */
+export const GetMessagesResponse = zod.object({
+  messages: zod.array(
+    zod.object({
+      id: zod.number(),
+      name: zod.string(),
+      email: zod.string(),
+      subject: zod.string(),
+      message: zod.string(),
+      read: zod.boolean(),
+      createdAt: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary Mark message as read
+ */
+export const MarkMessageReadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const MarkMessageReadResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string(),
+});
+
+/**
+ * @summary Delete a message
+ */
+export const DeleteMessageParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteMessageResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string(),
+});

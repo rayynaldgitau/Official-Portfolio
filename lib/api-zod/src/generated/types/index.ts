@@ -6,4 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./errorResponse";
+export * from "./getMessagesResponse";
 export * from "./healthStatus";
+export * from "./messageItem";
+export * from "./sendMessageRequest";
+export * from "./sendMessageResponse";

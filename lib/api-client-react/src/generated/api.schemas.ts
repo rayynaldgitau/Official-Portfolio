@@ -8,3 +8,33 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface SendMessageRequest {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export interface MessageItem {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface GetMessagesResponse {
+  messages: MessageItem[];
+}
+
+export interface SendMessageResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+}

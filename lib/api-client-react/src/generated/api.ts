@@ -5,18 +5,27 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  ErrorResponse,
+  GetMessagesResponse,
+  HealthStatus,
+  SendMessageRequest,
+  SendMessageResponse,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -99,3 +108,334 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * Submits a contact form message from the portfolio
+ * @summary Send a contact message
+ */
+export const getSendMessageUrl = () => {
+  return `/api/messages`;
+};
+
+export const sendMessage = async (
+  sendMessageRequest: SendMessageRequest,
+  options?: RequestInit,
+): Promise<SendMessageResponse> => {
+  return customFetch<SendMessageResponse>(getSendMessageUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(sendMessageRequest),
+  });
+};
+
+export const getSendMessageMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMessage>>,
+    TError,
+    { data: BodyType<SendMessageRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendMessage>>,
+  TError,
+  { data: BodyType<SendMessageRequest> },
+  TContext
+> => {
+  const mutationKey = ["sendMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendMessage>>,
+    { data: BodyType<SendMessageRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return sendMessage(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendMessage>>
+>;
+export type SendMessageMutationBody = BodyType<SendMessageRequest>;
+export type SendMessageMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Send a contact message
+ */
+export const useSendMessage = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMessage>>,
+    TError,
+    { data: BodyType<SendMessageRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendMessage>>,
+  TError,
+  { data: BodyType<SendMessageRequest> },
+  TContext
+> => {
+  return useMutation(getSendMessageMutationOptions(options));
+};
+
+/**
+ * Returns all contact form messages (admin only)
+ * @summary Get all messages
+ */
+export const getGetMessagesUrl = () => {
+  return `/api/messages`;
+};
+
+export const getMessages = async (
+  options?: RequestInit,
+): Promise<GetMessagesResponse> => {
+  return customFetch<GetMessagesResponse>(getGetMessagesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMessagesQueryKey = () => {
+  return [`/api/messages`] as const;
+};
+
+export const getGetMessagesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMessages>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMessages>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMessagesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMessages>>> = ({
+    signal,
+  }) => getMessages({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMessages>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMessagesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMessages>>
+>;
+export type GetMessagesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all messages
+ */
+
+export function useGetMessages<
+  TData = Awaited<ReturnType<typeof getMessages>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMessages>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMessagesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Mark message as read
+ */
+export const getMarkMessageReadUrl = (id: number) => {
+  return `/api/messages/${id}/read`;
+};
+
+export const markMessageRead = async (
+  id: number,
+  options?: RequestInit,
+): Promise<SendMessageResponse> => {
+  return customFetch<SendMessageResponse>(getMarkMessageReadUrl(id), {
+    ...options,
+    method: "PATCH",
+  });
+};
+
+export const getMarkMessageReadMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markMessageRead>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markMessageRead>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["markMessageRead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markMessageRead>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return markMessageRead(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkMessageReadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markMessageRead>>
+>;
+
+export type MarkMessageReadMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Mark message as read
+ */
+export const useMarkMessageRead = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markMessageRead>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof markMessageRead>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getMarkMessageReadMutationOptions(options));
+};
+
+/**
+ * @summary Delete a message
+ */
+export const getDeleteMessageUrl = (id: number) => {
+  return `/api/messages/${id}`;
+};
+
+export const deleteMessage = async (
+  id: number,
+  options?: RequestInit,
+): Promise<SendMessageResponse> => {
+  return customFetch<SendMessageResponse>(getDeleteMessageUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteMessageMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMessage>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteMessage>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteMessage>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteMessage(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteMessage>>
+>;
+
+export type DeleteMessageMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Delete a message
+ */
+export const useDeleteMessage = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMessage>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteMessage>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteMessageMutationOptions(options));
+};
