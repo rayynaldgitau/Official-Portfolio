@@ -15,6 +15,7 @@ import {
   Award,
   GraduationCap,
   ChevronRight,
+  ChevronDown,
   Menu,
   X,
   User,
@@ -563,13 +564,13 @@ export default function Portfolio() {
         </div>
 
         <motion.div
-          className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 cursor-pointer"
+          onClick={() => scrollTo('about')}
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <div className="w-6 h-10 border-2 border-slate-600 rounded-full flex justify-center p-2">
-            <div className="w-1 h-3 bg-cyan-400 rounded-full" />
-          </div>
+          <ChevronDown className="w-5 h-5 text-slate-500" />
+          <ChevronDown className="w-5 h-5 text-slate-400 -mt-3" />
         </motion.div>
       </section>
 
