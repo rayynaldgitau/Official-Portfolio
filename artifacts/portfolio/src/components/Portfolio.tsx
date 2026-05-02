@@ -254,11 +254,30 @@ function loadExperience(): StoredExperience[] {
   }
 }
 
-const certifications = [
-  { name: 'AWS Solutions Architect', issuer: 'Amazon Web Services', year: '2024' },
-  { name: 'Certified Kubernetes Administrator', issuer: 'CNCF', year: '2023' },
-  { name: 'HashiCorp Terraform Associate', issuer: 'HashiCorp', year: '2023' },
+const CERT_KEY = 'portfolio_certifications';
+
+interface StoredCert {
+  id: number;
+  name: string;
+  issuer: string;
+  year: string;
+  url: string;
+}
+
+const DEFAULT_CERTS: StoredCert[] = [
+  { id: 1, name: 'AWS Solutions Architect', issuer: 'Amazon Web Services', year: '2024', url: '' },
+  { id: 2, name: 'Certified Kubernetes Administrator', issuer: 'CNCF', year: '2023', url: '' },
+  { id: 3, name: 'HashiCorp Terraform Associate', issuer: 'HashiCorp', year: '2023', url: '' },
 ];
+
+function loadCerts(): StoredCert[] {
+  try {
+    const stored = localStorage.getItem(CERT_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_CERTS;
+  } catch {
+    return DEFAULT_CERTS;
+  }
+}
 
 export default function Portfolio() {
   const [scrolled, setScrolled] = useState(false);
@@ -270,6 +289,7 @@ export default function Portfolio() {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(loadSocialLinks);
   const [profile, setProfile] = useState(loadProfile);
   const [experience, setExperience] = useState<StoredExperience[]>(loadExperience);
+  const [certifications, setCertifications] = useState<StoredCert[]>(loadCerts);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -287,12 +307,14 @@ export default function Portfolio() {
     const handleSocialUpdate = () => setSocialLinks(loadSocialLinks());
     const handleProfileUpdate = () => setProfile(loadProfile());
     const handleExperienceUpdate = () => setExperience(loadExperience());
+    const handleCertsUpdate = () => setCertifications(loadCerts());
     window.addEventListener('portfolio-projects-updated', handleProjectsUpdate);
     window.addEventListener('portfolio-skills-updated', handleSkillsUpdate);
     window.addEventListener('resume-updated', handleResumeUpdate);
     window.addEventListener('social-links-updated', handleSocialUpdate);
     window.addEventListener('profile-updated', handleProfileUpdate);
     window.addEventListener('experience-updated', handleExperienceUpdate);
+    window.addEventListener('certs-updated', handleCertsUpdate);
     return () => {
       window.removeEventListener('portfolio-projects-updated', handleProjectsUpdate);
       window.removeEventListener('portfolio-skills-updated', handleSkillsUpdate);
@@ -300,6 +322,7 @@ export default function Portfolio() {
       window.removeEventListener('social-links-updated', handleSocialUpdate);
       window.removeEventListener('profile-updated', handleProfileUpdate);
       window.removeEventListener('experience-updated', handleExperienceUpdate);
+      window.removeEventListener('certs-updated', handleCertsUpdate);
     };
   }, []);
 
@@ -576,18 +599,31 @@ export default function Portfolio() {
               <div className="flex flex-wrap justify-center gap-4">
                 {certifications.map((cert, idx) => (
                   <motion.div
-                    key={idx}
+                    key={cert.id}
                     initial={{ opacity: 0, scale: 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center gap-3 bg-slate-900/50 border border-slate-800 rounded-lg px-5 py-3"
                   >
-                    <Award className="w-5 h-5 text-cyan-400" />
-                    <div>
-                      <p className="text-sm font-semibold text-white">{cert.name}</p>
-                      <p className="text-xs text-slate-400">{cert.issuer} · {cert.year}</p>
-                    </div>
+                    {cert.url ? (
+                      <a href={cert.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-3 bg-slate-900/50 border border-slate-800 hover:border-cyan-400/40 rounded-lg px-5 py-3 transition-all group">
+                        <Award className="w-5 h-5 text-cyan-400" />
+                        <div>
+                          <p className="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors">{cert.name}</p>
+                          <p className="text-xs text-slate-400">{cert.issuer} · {cert.year}</p>
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 ml-1 transition-colors" />
+                      </a>
+                    ) : (
+                      <div className="flex items-center gap-3 bg-slate-900/50 border border-slate-800 rounded-lg px-5 py-3">
+                        <Award className="w-5 h-5 text-cyan-400" />
+                        <div>
+                          <p className="text-sm font-semibold text-white">{cert.name}</p>
+                          <p className="text-xs text-slate-400">{cert.issuer} · {cert.year}</p>
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>

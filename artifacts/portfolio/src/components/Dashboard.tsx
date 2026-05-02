@@ -35,6 +35,8 @@ import {
   Link,
   History,
   MapPin,
+  Award,
+  ExternalLink,
 } from 'lucide-react';
 import MessagesInbox from './MessagesInbox';
 import { Button } from './ui/button';
@@ -226,6 +228,31 @@ function loadExperience(): Experience[] {
   }
 }
 
+interface Cert {
+  id: number;
+  name: string;
+  issuer: string;
+  year: string;
+  url: string;
+}
+
+const CERT_KEY = 'portfolio_certifications';
+
+const DEFAULT_CERTS: Cert[] = [
+  { id: 1, name: 'AWS Solutions Architect', issuer: 'Amazon Web Services', year: '2024', url: '' },
+  { id: 2, name: 'Certified Kubernetes Administrator', issuer: 'CNCF', year: '2023', url: '' },
+  { id: 3, name: 'HashiCorp Terraform Associate', issuer: 'HashiCorp', year: '2023', url: '' },
+];
+
+function loadCerts(): Cert[] {
+  try {
+    const stored = localStorage.getItem(CERT_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_CERTS;
+  } catch {
+    return DEFAULT_CERTS;
+  }
+}
+
 const recentActivity = [
   { action: 'Updated project', target: 'Cloud Infrastructure Automation', time: '2 hours ago' },
   { action: 'Added new skill', target: 'Prometheus', time: '5 hours ago' },
@@ -243,15 +270,19 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [projects, setProjects] = useState<Project[]>(loadProjects);
   const [skills, setSkills] = useState<Skill[]>(loadSkills);
   const [experiences, setExperiences] = useState<Experience[]>(loadExperience);
+  const [certs, setCerts] = useState<Cert[]>(loadCerts);
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [isAddingExp, setIsAddingExp] = useState(false);
+  const [isAddingCert, setIsAddingCert] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editingExp, setEditingExp] = useState<Experience | null>(null);
 
   const [newProject, setNewProject] = useState({ title: '', description: '', tags: '' });
   const [newSkill, setNewSkill] = useState({ name: '', level: '80', category: '' });
   const [newExp, setNewExp] = useState({ role: '', company: '', location: '', startDate: '', endDate: '', current: false, description: '', achievements: '' });
+  const [newCert, setNewCert] = useState({ name: '', issuer: '', year: '', url: '' });
+  const [editingCert, setEditingCert] = useState<Cert | null>(null);
 
   useEffect(() => {
     localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
@@ -267,6 +298,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     localStorage.setItem(EXPERIENCE_KEY, JSON.stringify(experiences));
     window.dispatchEvent(new Event('experience-updated'));
   }, [experiences]);
+
+  useEffect(() => {
+    localStorage.setItem(CERT_KEY, JSON.stringify(certs));
+    window.dispatchEvent(new Event('certs-updated'));
+  }, [certs]);
 
   const [profileSettings, setProfileSettings] = useState(loadProfile);
   const [settingsSaved, setSettingsSaved] = useState(false);
@@ -421,6 +457,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     { id: 'projects', label: 'Projects', icon: Briefcase },
     { id: 'skills', label: 'Skills', icon: Code },
     { id: 'experience', label: 'Experience', icon: History },
+    { id: 'certifications', label: 'Certifications', icon: Award },
     { id: 'messages', label: 'Messages', icon: Inbox },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -957,6 +994,138 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                       <Button onClick={() => {
                         setExperiences(experiences.map(e => e.id === editingExp.id ? { ...editingExp, achievements: editingExp.achievements.map(a => a.trim()).filter(Boolean) } : e));
                         setEditingExp(null);
+                      }} className="bg-gradient-to-r from-cyan-500 to-blue-600">Save Changes</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </motion.div>
+          )}
+
+          {/* Certifications Tab */}
+          {activeTab === 'certifications' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Certifications</h1>
+                  <p className="text-slate-400">Manage your credentials ({certs.length} total)</p>
+                </div>
+                <Dialog open={isAddingCert} onOpenChange={setIsAddingCert}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Certification
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Add Certification</DialogTitle>
+                      <DialogDescription className="text-slate-400">Add a new credential or certificate.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div>
+                        <Label>Certification Name</Label>
+                        <Input value={newCert.name} onChange={e => setNewCert({ ...newCert, name: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="e.g. AWS Solutions Architect" />
+                      </div>
+                      <div>
+                        <Label>Issuing Organisation</Label>
+                        <Input value={newCert.issuer} onChange={e => setNewCert({ ...newCert, issuer: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="e.g. Amazon Web Services" />
+                      </div>
+                      <div>
+                        <Label>Year</Label>
+                        <Input value={newCert.year} onChange={e => setNewCert({ ...newCert, year: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="e.g. 2024" />
+                      </div>
+                      <div>
+                        <Label>Credential URL <span className="text-slate-500 font-normal">(optional)</span></Label>
+                        <Input value={newCert.url} onChange={e => setNewCert({ ...newCert, url: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="https://credly.com/badges/..." />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddingCert(false)} className="border-slate-700 text-white hover:bg-slate-800">Cancel</Button>
+                      <Button onClick={() => {
+                        if (newCert.name && newCert.issuer) {
+                          setCerts([...certs, { id: Date.now(), ...newCert }]);
+                          setNewCert({ name: '', issuer: '', year: '', url: '' });
+                          setIsAddingCert(false);
+                        }
+                      }} className="bg-gradient-to-r from-cyan-500 to-blue-600">Add Certification</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                {certs.map((cert) => (
+                  <motion.div key={cert.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                    <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/20 transition-all">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Award className="w-5 h-5 text-cyan-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-white text-sm leading-tight">{cert.name}</h3>
+                            <p className="text-cyan-400 text-xs mt-0.5">{cert.issuer}</p>
+                            <p className="text-slate-500 text-xs mt-0.5">{cert.year}</p>
+                            {cert.url && (
+                              <a href={cert.url} target="_blank" rel="noopener noreferrer" className="text-xs text-slate-400 hover:text-cyan-400 flex items-center gap-1 mt-1 transition-colors">
+                                <ExternalLink className="w-3 h-3" /> View credential
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-slate-800 text-slate-400" onClick={() => setEditingCert({ ...cert })}>
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:text-red-400 text-slate-400" onClick={() => setCerts(certs.filter(c => c.id !== cert.id))}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+
+                {certs.length === 0 && (
+                  <div className="col-span-2 text-center py-16 text-slate-500">
+                    <Award className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                    <p>No certifications added yet.</p>
+                    <p className="text-sm mt-1">Click "Add Certification" to get started.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Edit Dialog */}
+              {editingCert && (
+                <Dialog open={!!editingCert} onOpenChange={(open) => { if (!open) setEditingCert(null); }}>
+                  <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Edit Certification</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div>
+                        <Label>Certification Name</Label>
+                        <Input value={editingCert.name} onChange={e => setEditingCert({ ...editingCert, name: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" />
+                      </div>
+                      <div>
+                        <Label>Issuing Organisation</Label>
+                        <Input value={editingCert.issuer} onChange={e => setEditingCert({ ...editingCert, issuer: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" />
+                      </div>
+                      <div>
+                        <Label>Year</Label>
+                        <Input value={editingCert.year} onChange={e => setEditingCert({ ...editingCert, year: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" />
+                      </div>
+                      <div>
+                        <Label>Credential URL <span className="text-slate-500 font-normal">(optional)</span></Label>
+                        <Input value={editingCert.url} onChange={e => setEditingCert({ ...editingCert, url: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="https://credly.com/badges/..." />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setEditingCert(null)} className="border-slate-700 text-white hover:bg-slate-800">Cancel</Button>
+                      <Button onClick={() => {
+                        setCerts(certs.map(c => c.id === editingCert.id ? editingCert : c));
+                        setEditingCert(null);
                       }} className="bg-gradient-to-r from-cyan-500 to-blue-600">Save Changes</Button>
                     </DialogFooter>
                   </DialogContent>
