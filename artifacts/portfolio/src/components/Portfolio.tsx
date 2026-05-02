@@ -100,6 +100,7 @@ interface StoredProject {
   status: string;
   tags: string[];
   views: number;
+  url?: string;
 }
 
 interface StoredSkill {
@@ -759,36 +760,59 @@ export default function Portfolio() {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.15 }}
                 >
-                  <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/50 transition-all overflow-hidden group h-full">
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={PROJECT_IMAGES[idx % PROJECT_IMAGES.length]}
-                        alt={project.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="text-xl text-white flex items-center justify-between">
-                        {project.title}
-                        <ExternalLink className="w-5 h-5 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </CardTitle>
-                      <CardDescription className="text-slate-400">{project.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {project.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="border-cyan-400/30 text-cyan-400 text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
+                  {project.url ? (
+                    <a href={project.url} target="_blank" rel="noopener noreferrer" className="block h-full">
+                      <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/50 transition-all overflow-hidden group h-full cursor-pointer">
+                        <div className="relative h-48 overflow-hidden">
+                          <img src={PROJECT_IMAGES[idx % PROJECT_IMAGES.length]} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+                        </div>
+                        <CardHeader>
+                          <CardTitle className="text-xl text-white flex items-center justify-between">
+                            {project.title}
+                            <ExternalLink className="w-5 h-5 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </CardTitle>
+                          <CardDescription className="text-slate-400">{project.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {project.tags.map((tag) => (
+                              <Badge key={tag} variant="outline" className="border-cyan-400/30 text-cyan-400 text-xs">{tag}</Badge>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-2 pt-4 border-t border-slate-800 text-sm text-slate-400">
+                            <span className={`w-2 h-2 rounded-full ${project.status === 'active' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                            {project.status === 'active' ? 'Active' : 'Completed'} · {project.views} views
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </a>
+                  ) : (
+                    <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/50 transition-all overflow-hidden group h-full">
+                      <div className="relative h-48 overflow-hidden">
+                        <img src={PROJECT_IMAGES[idx % PROJECT_IMAGES.length]} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
                       </div>
-                      <div className="flex items-center gap-2 pt-4 border-t border-slate-800 text-sm text-slate-400">
-                        <span className={`w-2 h-2 rounded-full ${project.status === 'active' ? 'bg-green-400' : 'bg-blue-400'}`} />
-                        {project.status === 'active' ? 'Active' : 'Completed'} · {project.views} views
-                      </div>
-                    </CardContent>
-                  </Card>
+                      <CardHeader>
+                        <CardTitle className="text-xl text-white flex items-center justify-between">
+                          {project.title}
+                          <ExternalLink className="w-5 h-5 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </CardTitle>
+                        <CardDescription className="text-slate-400">{project.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {project.tags.map((tag) => (
+                            <Badge key={tag} variant="outline" className="border-cyan-400/30 text-cyan-400 text-xs">{tag}</Badge>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-2 pt-4 border-t border-slate-800 text-sm text-slate-400">
+                          <span className={`w-2 h-2 rounded-full ${project.status === 'active' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                          {project.status === 'active' ? 'Active' : 'Completed'} · {project.views} views
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </motion.div>
               ))}
             </div>

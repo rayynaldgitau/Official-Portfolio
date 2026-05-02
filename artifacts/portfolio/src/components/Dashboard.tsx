@@ -125,6 +125,7 @@ interface Project {
   status: 'active' | 'completed' | 'archived';
   tags: string[];
   views: number;
+  url?: string;
 }
 
 interface Skill {
@@ -312,7 +313,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editingExp, setEditingExp] = useState<Experience | null>(null);
 
-  const [newProject, setNewProject] = useState({ title: '', description: '', tags: '' });
+  const [newProject, setNewProject] = useState({ title: '', description: '', tags: '', url: '' });
   const [newSkill, setNewSkill] = useState({ name: '', level: '80', category: '' });
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [newExp, setNewExp] = useState({ role: '', company: '', location: '', startDate: '', endDate: '', current: false, description: '', achievements: '' });
@@ -485,9 +486,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         description: newProject.description,
         status: 'active',
         tags: newProject.tags.split(',').map(t => t.trim()).filter(Boolean),
-        views: 0
+        views: 0,
+        url: newProject.url || undefined,
       }]);
-      setNewProject({ title: '', description: '', tags: '' });
+      setNewProject({ title: '', description: '', tags: '', url: '' });
       setIsAddingProject(false);
     }
   };
@@ -738,6 +740,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                         <Label htmlFor="p-tags">Tags (comma-separated)</Label>
                         <Input id="p-tags" value={newProject.tags} onChange={(e) => setNewProject({ ...newProject, tags: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="e.g., Docker, Kubernetes, AWS" />
                       </div>
+                      <div>
+                        <Label htmlFor="p-url">Project URL (optional)</Label>
+                        <Input id="p-url" value={newProject.url ?? ''} onChange={(e) => setNewProject({ ...newProject, url: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" placeholder="https://github.com/..." />
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsAddingProject(false)} className="border-slate-700 text-white hover:bg-slate-800">Cancel</Button>
@@ -813,15 +819,31 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                     <div className="space-y-4 py-4">
                       <div>
                         <Label>Title</Label>
-                        <Input value={editingProject.title} onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" />
+                        <Input value={editingProject.title} onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" />
                       </div>
                       <div>
                         <Label>Description</Label>
-                        <Textarea value={editingProject.description} onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })} className="bg-slate-800 border-slate-700 mt-1" />
+                        <Textarea value={editingProject.description} onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" />
                       </div>
                       <div>
                         <Label>Tags (comma-separated)</Label>
-                        <Input value={editingProject.tags.join(', ')} onChange={(e) => setEditingProject({ ...editingProject, tags: e.target.value.split(',').map(t => t.trim()) })} className="bg-slate-800 border-slate-700 mt-1" />
+                        <Input value={editingProject.tags.join(', ')} onChange={(e) => setEditingProject({ ...editingProject, tags: e.target.value.split(',').map(t => t.trim()) })} className="bg-slate-800 border-slate-700 mt-1 text-white" />
+                      </div>
+                      <div>
+                        <Label>Project URL (optional)</Label>
+                        <Input value={editingProject.url ?? ''} onChange={(e) => setEditingProject({ ...editingProject, url: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" placeholder="https://github.com/..." />
+                      </div>
+                      <div>
+                        <Label>Status</Label>
+                        <select
+                          value={editingProject.status}
+                          onChange={e => setEditingProject({ ...editingProject, status: e.target.value as Project['status'] })}
+                          className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        >
+                          <option value="active">Active</option>
+                          <option value="completed">Completed</option>
+                          <option value="archived">Archived</option>
+                        </select>
                       </div>
                     </div>
                     <DialogFooter>
