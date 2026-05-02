@@ -1031,8 +1031,7 @@ export default function Portfolio() {
       <footer className="border-t border-slate-800 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-400">
           <div className="flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-cyan-400" />
-            <span className="text-sm font-semibold text-white">{profile.name}</span>
+            <img src={logoUrl || '/logo.png'} alt="RG Logo" className="h-7 w-auto" />
           </div>
           <p className="text-sm text-center">
             Built with React, Tailwind CSS, and Motion — © 2026
