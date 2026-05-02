@@ -314,6 +314,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
   const [newProject, setNewProject] = useState({ title: '', description: '', tags: '' });
   const [newSkill, setNewSkill] = useState({ name: '', level: '80', category: '' });
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [newExp, setNewExp] = useState({ role: '', company: '', location: '', startDate: '', endDate: '', current: false, description: '', achievements: '' });
   const [newCert, setNewCert] = useState({ name: '', issuer: '', year: '', url: '' });
   const [editingCert, setEditingCert] = useState<Cert | null>(null);
@@ -890,7 +891,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                             </div>
                           </div>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-slate-800 text-slate-400">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-slate-800 text-slate-400" onClick={() => setEditingSkill({ ...skill })}>
                               <Edit className="w-3 h-3" />
                             </Button>
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:text-red-400 text-slate-400" onClick={() => setSkills(skills.filter(s => s.id !== skill.id))}>
@@ -907,6 +908,66 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   </motion.div>
                 ))}
               </div>
+
+              {/* Edit Skill Dialog */}
+              {editingSkill && (
+                <Dialog open={!!editingSkill} onOpenChange={(open) => { if (!open) setEditingSkill(null); }}>
+                  <DialogContent className="bg-slate-900 border-slate-800 text-white">
+                    <DialogHeader>
+                      <DialogTitle>Edit Skill</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div>
+                        <Label>Skill Name</Label>
+                        <Input
+                          value={editingSkill.name}
+                          onChange={e => setEditingSkill({ ...editingSkill, name: e.target.value })}
+                          className="bg-slate-800 border-slate-700 mt-1 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label>Proficiency Level (0-100)</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={editingSkill.level}
+                          onChange={e => setEditingSkill({ ...editingSkill, level: parseInt(e.target.value) || 0 })}
+                          className="bg-slate-800 border-slate-700 mt-1 text-white"
+                        />
+                        <div className="mt-2 w-full bg-slate-800 rounded-full h-1.5">
+                          <div
+                            className="bg-gradient-to-r from-cyan-400 to-blue-500 h-1.5 rounded-full transition-all"
+                            style={{ width: `${Math.min(100, Math.max(0, editingSkill.level))}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-slate-400 text-right mt-1">{editingSkill.level}%</p>
+                      </div>
+                      <div>
+                        <Label>Category</Label>
+                        <Input
+                          value={editingSkill.category}
+                          onChange={e => setEditingSkill({ ...editingSkill, category: e.target.value })}
+                          className="bg-slate-800 border-slate-700 mt-1 text-white"
+                          placeholder="e.g., Automation"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setEditingSkill(null)} className="border-slate-700 text-white hover:bg-slate-800">Cancel</Button>
+                      <Button
+                        onClick={() => {
+                          setSkills(skills.map(s => s.id === editingSkill.id ? editingSkill : s));
+                          setEditingSkill(null);
+                        }}
+                        className="bg-gradient-to-r from-cyan-500 to-blue-600"
+                      >
+                        Save Changes
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </motion.div>
           )}
 
