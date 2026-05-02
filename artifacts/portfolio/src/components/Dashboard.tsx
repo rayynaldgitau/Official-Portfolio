@@ -24,6 +24,15 @@ import {
   User,
   CheckCircle,
   Loader2,
+  Github,
+  Linkedin,
+  Mail,
+  Globe,
+  Twitter,
+  Youtube,
+  Instagram,
+  Facebook,
+  Link,
 } from 'lucide-react';
 import MessagesInbox from './MessagesInbox';
 import { Button } from './ui/button';
@@ -42,6 +51,46 @@ import {
   DialogTrigger,
 } from './ui/dialog';
 import { Label } from './ui/label';
+
+const SOCIAL_LINKS_KEY = 'portfolio_social_links';
+
+const SOCIAL_PLATFORMS = [
+  { label: 'GitHub', value: 'github', icon: Github },
+  { label: 'LinkedIn', value: 'linkedin', icon: Linkedin },
+  { label: 'Email', value: 'email', icon: Mail },
+  { label: 'Twitter / X', value: 'twitter', icon: Twitter },
+  { label: 'YouTube', value: 'youtube', icon: Youtube },
+  { label: 'Instagram', value: 'instagram', icon: Instagram },
+  { label: 'Facebook', value: 'facebook', icon: Facebook },
+  { label: 'Website', value: 'website', icon: Globe },
+  { label: 'Other', value: 'other', icon: Link },
+] as const;
+
+interface SocialLink {
+  id: number;
+  platform: string;
+  label: string;
+  url: string;
+}
+
+const DEFAULT_SOCIAL_LINKS: SocialLink[] = [
+  { id: 1, platform: 'github', label: 'GitHub', url: 'https://github.com' },
+  { id: 2, platform: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com' },
+  { id: 3, platform: 'email', label: 'Email', url: 'mailto:raynald.gitau@example.com' },
+];
+
+function loadSocialLinks(): SocialLink[] {
+  try {
+    const stored = localStorage.getItem(SOCIAL_LINKS_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_SOCIAL_LINKS;
+  } catch {
+    return DEFAULT_SOCIAL_LINKS;
+  }
+}
+
+function getSocialIcon(platform: string) {
+  return SOCIAL_PLATFORMS.find(p => p.value === platform)?.icon ?? Link;
+}
 
 interface Project {
   id: number;
@@ -144,6 +193,16 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const PROFILE_PIC_KEY = 'portfolio_profile_pic_url';
   const RESUME_KEY = 'portfolio_resume_url';
   const RESUME_NAME_KEY = 'portfolio_resume_name';
+
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(loadSocialLinks);
+  const [isAddingSocial, setIsAddingSocial] = useState(false);
+  const [newSocial, setNewSocial] = useState({ platform: 'github', label: 'GitHub', url: '' });
+  const [editingSocial, setEditingSocial] = useState<SocialLink | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem(SOCIAL_LINKS_KEY, JSON.stringify(socialLinks));
+    window.dispatchEvent(new Event('social-links-updated'));
+  }, [socialLinks]);
 
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(() => localStorage.getItem(PROFILE_PIC_KEY));
   const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
@@ -882,20 +941,151 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
                 <Card className="bg-slate-900/50 border-slate-800">
                   <CardHeader>
-                    <CardTitle className="text-white">Social Links</CardTitle>
-                    <CardDescription>Update your social media profiles</CardDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-white">Social Links</CardTitle>
+                        <CardDescription className="mt-1">Manage links shown in the hero, contact, and footer sections</CardDescription>
+                      </div>
+                      <Dialog open={isAddingSocial} onOpenChange={setIsAddingSocial}>
+                        <DialogTrigger asChild>
+                          <Button size="sm" className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
+                            <Plus className="w-4 h-4 mr-1" /> Add Link
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-slate-900 border-slate-800 text-white">
+                          <DialogHeader>
+                            <DialogTitle>Add Social Link</DialogTitle>
+                            <DialogDescription className="text-slate-400">Choose a platform and enter your profile URL</DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div>
+                              <Label>Platform</Label>
+                              <select
+                                value={newSocial.platform}
+                                onChange={(e) => {
+                                  const p = SOCIAL_PLATFORMS.find(x => x.value === e.target.value);
+                                  setNewSocial({ platform: e.target.value, label: p?.label ?? e.target.value, url: newSocial.url });
+                                }}
+                                className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                              >
+                                {SOCIAL_PLATFORMS.map(p => (
+                                  <option key={p.value} value={p.value}>{p.label}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <Label>URL</Label>
+                              <Input
+                                value={newSocial.url}
+                                onChange={(e) => setNewSocial({ ...newSocial, url: e.target.value })}
+                                className="bg-slate-800 border-slate-700 mt-1 text-white"
+                                placeholder={newSocial.platform === 'email' ? 'mailto:you@example.com' : 'https://...'}
+                              />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsAddingSocial(false)} className="border-slate-700 text-white hover:bg-slate-800">Cancel</Button>
+                            <Button
+                              onClick={() => {
+                                if (newSocial.url) {
+                                  setSocialLinks([...socialLinks, { id: Date.now(), platform: newSocial.platform, label: newSocial.label, url: newSocial.url }]);
+                                  setNewSocial({ platform: 'github', label: 'GitHub', url: '' });
+                                  setIsAddingSocial(false);
+                                }
+                              }}
+                              className="bg-gradient-to-r from-cyan-500 to-blue-600"
+                            >
+                              Add Link
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label className="text-white">GitHub URL</Label>
-                      <Input value={profileSettings.github} onChange={(e) => setProfileSettings({ ...profileSettings, github: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" placeholder="https://github.com/username" />
-                    </div>
-                    <div>
-                      <Label className="text-white">LinkedIn URL</Label>
-                      <Input value={profileSettings.linkedin} onChange={(e) => setProfileSettings({ ...profileSettings, linkedin: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" placeholder="https://linkedin.com/in/username" />
-                    </div>
+                  <CardContent className="space-y-3">
+                    {socialLinks.length === 0 && (
+                      <p className="text-slate-500 text-sm text-center py-4">No social links yet. Click "Add Link" to get started.</p>
+                    )}
+                    {socialLinks.map((link) => {
+                      const SocialIcon = getSocialIcon(link.platform);
+                      return (
+                        <div key={link.id} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                          <div className="w-9 h-9 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                            <SocialIcon className="w-4 h-4 text-cyan-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white">{link.label}</p>
+                            <p className="text-xs text-slate-400 truncate">{link.url}</p>
+                          </div>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <Button
+                              variant="ghost" size="sm"
+                              className="h-8 w-8 p-0 hover:bg-slate-700 text-slate-400"
+                              onClick={() => setEditingSocial(link)}
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              variant="ghost" size="sm"
+                              className="h-8 w-8 p-0 hover:text-red-400 text-slate-400"
+                              onClick={() => setSocialLinks(socialLinks.filter(s => s.id !== link.id))}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </CardContent>
                 </Card>
+
+                {/* Edit Social Link Dialog */}
+                {editingSocial && (
+                  <Dialog open={!!editingSocial} onOpenChange={() => setEditingSocial(null)}>
+                    <DialogContent className="bg-slate-900 border-slate-800 text-white">
+                      <DialogHeader>
+                        <DialogTitle>Edit Social Link</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div>
+                          <Label>Platform</Label>
+                          <select
+                            value={editingSocial.platform}
+                            onChange={(e) => {
+                              const p = SOCIAL_PLATFORMS.find(x => x.value === e.target.value);
+                              setEditingSocial({ ...editingSocial, platform: e.target.value, label: p?.label ?? e.target.value });
+                            }}
+                            className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                          >
+                            {SOCIAL_PLATFORMS.map(p => (
+                              <option key={p.value} value={p.value}>{p.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <Label>URL</Label>
+                          <Input
+                            value={editingSocial.url}
+                            onChange={(e) => setEditingSocial({ ...editingSocial, url: e.target.value })}
+                            className="bg-slate-800 border-slate-700 mt-1 text-white"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditingSocial(null)} className="border-slate-700 text-white hover:bg-slate-800">Cancel</Button>
+                        <Button
+                          onClick={() => {
+                            setSocialLinks(socialLinks.map(s => s.id === editingSocial.id ? editingSocial : s));
+                            setEditingSocial(null);
+                          }}
+                          className="bg-gradient-to-r from-cyan-500 to-blue-600"
+                        >
+                          Save Changes
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
 
                 <Button
                   onClick={handleSaveSettings}

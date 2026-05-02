@@ -17,7 +17,13 @@ import {
   ChevronRight,
   Menu,
   X,
-  User
+  User,
+  Globe,
+  Twitter,
+  Youtube,
+  Instagram,
+  Facebook,
+  Link,
 } from 'lucide-react';
 import ContactForm from './ContactForm';
 import { Button } from './ui/button';
@@ -29,6 +35,43 @@ const PROJECTS_KEY = 'portfolio_projects';
 const SKILLS_KEY = 'portfolio_skills';
 const RESUME_KEY = 'portfolio_resume_url';
 const RESUME_NAME_KEY = 'portfolio_resume_name';
+const SOCIAL_LINKS_KEY = 'portfolio_social_links';
+
+interface SocialLink {
+  id: number;
+  platform: string;
+  label: string;
+  url: string;
+}
+
+const DEFAULT_SOCIAL_LINKS: SocialLink[] = [
+  { id: 1, platform: 'github', label: 'GitHub', url: 'https://github.com' },
+  { id: 2, platform: 'linkedin', label: 'LinkedIn', url: 'https://linkedin.com' },
+  { id: 3, platform: 'email', label: 'Email', url: 'mailto:raynald.gitau@example.com' },
+];
+
+function loadSocialLinks(): SocialLink[] {
+  try {
+    const stored = localStorage.getItem(SOCIAL_LINKS_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_SOCIAL_LINKS;
+  } catch {
+    return DEFAULT_SOCIAL_LINKS;
+  }
+}
+
+function getSocialIcon(platform: string) {
+  const map: Record<string, React.ElementType> = {
+    github: Github,
+    linkedin: Linkedin,
+    email: Mail,
+    twitter: Twitter,
+    youtube: Youtube,
+    instagram: Instagram,
+    facebook: Facebook,
+    website: Globe,
+  };
+  return map[platform] ?? Link;
+}
 
 interface StoredProject {
   id: number;
@@ -173,6 +216,7 @@ export default function Portfolio() {
   const [portfolioSkills, setPortfolioSkills] = useState<StoredSkill[]>(loadPortfolioSkills);
   const [resumeUrl, setResumeUrl] = useState<string | null>(() => localStorage.getItem(RESUME_KEY));
   const [resumeFileName, setResumeFileName] = useState<string | null>(() => localStorage.getItem(RESUME_NAME_KEY));
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(loadSocialLinks);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -187,13 +231,16 @@ export default function Portfolio() {
       setResumeUrl(localStorage.getItem(RESUME_KEY));
       setResumeFileName(localStorage.getItem(RESUME_NAME_KEY));
     };
+    const handleSocialUpdate = () => setSocialLinks(loadSocialLinks());
     window.addEventListener('portfolio-projects-updated', handleProjectsUpdate);
     window.addEventListener('portfolio-skills-updated', handleSkillsUpdate);
     window.addEventListener('resume-updated', handleResumeUpdate);
+    window.addEventListener('social-links-updated', handleSocialUpdate);
     return () => {
       window.removeEventListener('portfolio-projects-updated', handleProjectsUpdate);
       window.removeEventListener('portfolio-skills-updated', handleSkillsUpdate);
       window.removeEventListener('resume-updated', handleResumeUpdate);
+      window.removeEventListener('social-links-updated', handleSocialUpdate);
     };
   }, []);
 
@@ -364,23 +411,25 @@ export default function Portfolio() {
               </Button>
             </div>
 
-            <div className="flex items-center justify-center gap-6">
-              {[
-                { icon: Github, href: 'https://github.com', label: 'GitHub' },
-                { icon: Linkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
-                { icon: Mail, href: 'mailto:raynald.gitau@example.com', label: 'Email' }
-              ].map((social, idx) => (
-                <motion.a
-                  key={idx}
-                  href={social.href}
-                  aria-label={social.label}
-                  className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center hover:border-cyan-400 hover:bg-cyan-400/10 transition-all"
-                  whileHover={{ scale: 1.1, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <social.icon className="w-5 h-5" />
-                </motion.a>
-              ))}
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              {socialLinks.map((social, idx) => {
+                const SocialIcon = getSocialIcon(social.platform);
+                return (
+                  <motion.a
+                    key={social.id}
+                    href={social.url}
+                    aria-label={social.label}
+                    className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center hover:border-cyan-400 hover:bg-cyan-400/10 transition-all"
+                    whileHover={{ scale: 1.1, y: -3 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 + idx * 0.1 }}
+                  >
+                    <SocialIcon className="w-5 h-5" />
+                  </motion.a>
+                );
+              })}
             </div>
           </motion.div>
         </div>
@@ -675,30 +724,30 @@ export default function Portfolio() {
             <div className="grid lg:grid-cols-2 gap-8 items-start">
               {/* Contact links */}
               <div className="space-y-4">
-                {[
-                  { icon: Mail, label: 'Email', value: 'raynald.gitau@example.com', href: 'mailto:raynald.gitau@example.com' },
-                  { icon: Github, label: 'GitHub', value: 'github.com/raynald', href: 'https://github.com' },
-                  { icon: Linkedin, label: 'LinkedIn', value: 'linkedin.com/in/raynald', href: 'https://linkedin.com' },
-                ].map((contact, idx) => (
-                  <motion.a
-                    key={idx}
-                    href={contact.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1 }}
-                    whileHover={{ x: 4 }}
-                    className="flex items-center gap-4 p-5 bg-slate-900/50 border border-slate-800 rounded-xl hover:border-cyan-400/50 transition-all group"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center group-hover:from-cyan-500/30 group-hover:to-blue-500/30 transition-all flex-shrink-0">
-                      <contact.icon className="w-6 h-6 text-cyan-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white">{contact.label}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{contact.value}</p>
-                    </div>
-                  </motion.a>
-                ))}
+                {socialLinks.map((social, idx) => {
+                  const SocialIcon = getSocialIcon(social.platform);
+                  const displayUrl = social.url.replace(/^mailto:/, '').replace(/^https?:\/\//, '');
+                  return (
+                    <motion.a
+                      key={social.id}
+                      href={social.url}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.1 }}
+                      whileHover={{ x: 4 }}
+                      className="flex items-center gap-4 p-5 bg-slate-900/50 border border-slate-800 rounded-xl hover:border-cyan-400/50 transition-all group"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center group-hover:from-cyan-500/30 group-hover:to-blue-500/30 transition-all flex-shrink-0">
+                        <SocialIcon className="w-6 h-6 text-cyan-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{social.label}</p>
+                        <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[200px]">{displayUrl}</p>
+                      </div>
+                    </motion.a>
+                  );
+                })}
               </div>
 
               {/* Contact Form */}
@@ -726,11 +775,14 @@ export default function Portfolio() {
             Built with React, Tailwind CSS, and Motion — © 2026
           </p>
           <div className="flex items-center gap-4">
-            {[Github, Linkedin, Mail].map((Icon, i) => (
-              <a key={i} href="#" className="hover:text-cyan-400 transition-colors">
-                <Icon className="w-4 h-4" />
-              </a>
-            ))}
+            {socialLinks.map((social) => {
+              const SocialIcon = getSocialIcon(social.platform);
+              return (
+                <a key={social.id} href={social.url} aria-label={social.label} className="hover:text-cyan-400 transition-colors">
+                  <SocialIcon className="w-4 h-4" />
+                </a>
+              );
+            })}
           </div>
         </div>
       </footer>
