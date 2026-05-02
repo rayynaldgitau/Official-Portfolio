@@ -18,6 +18,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import ContactForm from './ContactForm';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -580,55 +581,59 @@ export default function Portfolio() {
 
       {/* Contact Section */}
       <section id="contact" className="py-32 relative">
-        <div className="max-w-4xl mx-auto px-6 text-center">
+        <div className="max-w-5xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center">
               Let's <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Connect</span>
             </h2>
-            <p className="text-xl text-slate-300 mb-12 max-w-2xl mx-auto">
+            <p className="text-xl text-slate-300 mb-12 max-w-2xl mx-auto text-center">
               I'm always interested in discussing new projects, creative ideas, or opportunities to be part of your vision.
             </p>
 
-            <div className="grid sm:grid-cols-3 gap-4 mb-12 max-w-2xl mx-auto">
-              {[
-                { icon: Mail, label: 'Email', value: 'raynald.gitau@example.com', href: 'mailto:raynald.gitau@example.com' },
-                { icon: Github, label: 'GitHub', value: 'github.com/raynald', href: 'https://github.com' },
-                { icon: Linkedin, label: 'LinkedIn', value: 'linkedin.com/in/raynald', href: 'https://linkedin.com' },
-              ].map((contact, idx) => (
-                <motion.a
-                  key={idx}
-                  href={contact.href}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ y: -4 }}
-                  className="flex flex-col items-center gap-3 p-6 bg-slate-900/50 border border-slate-800 rounded-xl hover:border-cyan-400/50 transition-all group"
-                >
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center group-hover:from-cyan-500/30 group-hover:to-blue-500/30 transition-all">
-                    <contact.icon className="w-6 h-6 text-cyan-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{contact.label}</p>
-                    <p className="text-xs text-slate-400 mt-1 break-all">{contact.value}</p>
-                  </div>
-                </motion.a>
-              ))}
-            </div>
+            <div className="grid lg:grid-cols-2 gap-8 items-start">
+              {/* Contact links */}
+              <div className="space-y-4">
+                {[
+                  { icon: Mail, label: 'Email', value: 'raynald.gitau@example.com', href: 'mailto:raynald.gitau@example.com' },
+                  { icon: Github, label: 'GitHub', value: 'github.com/raynald', href: 'https://github.com' },
+                  { icon: Linkedin, label: 'LinkedIn', value: 'linkedin.com/in/raynald', href: 'https://linkedin.com' },
+                ].map((contact, idx) => (
+                  <motion.a
+                    key={idx}
+                    href={contact.href}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ x: 4 }}
+                    className="flex items-center gap-4 p-5 bg-slate-900/50 border border-slate-800 rounded-xl hover:border-cyan-400/50 transition-all group"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center group-hover:from-cyan-500/30 group-hover:to-blue-500/30 transition-all flex-shrink-0">
+                      <contact.icon className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{contact.label}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{contact.value}</p>
+                    </div>
+                  </motion.a>
+                ))}
+              </div>
 
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
-              onClick={() => window.location.href = 'mailto:raynald.gitau@example.com'}
-            >
-              <Mail className="w-5 h-5 mr-2" />
-              Send me a message
-            </Button>
+              {/* Contact Form */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <ContactForm />
+              </motion.div>
+            </div>
           </motion.div>
         </div>
       </section>

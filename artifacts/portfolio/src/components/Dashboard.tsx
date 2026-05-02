@@ -19,7 +19,9 @@ import {
   X,
   Save,
   Terminal,
+  Inbox,
 } from 'lucide-react';
+import MessagesInbox from './MessagesInbox';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -148,6 +150,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: Briefcase },
     { id: 'skills', label: 'Skills', icon: Code },
+    { id: 'messages', label: 'Messages', icon: Inbox },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -504,6 +507,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 ))}
               </div>
             </motion.div>
+          )}
+
+          {/* Messages Tab */}
+          {activeTab === 'messages' && (
+            <div className="p-0">
+              <MessagesInbox />
+            </div>
           )}
 
           {/* Analytics Tab */}
