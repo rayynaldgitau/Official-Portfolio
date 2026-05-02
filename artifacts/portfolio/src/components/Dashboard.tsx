@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import {
   LayoutDashboard,
@@ -20,6 +20,10 @@ import {
   Save,
   Terminal,
   Inbox,
+  Upload,
+  User,
+  CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import MessagesInbox from './MessagesInbox';
 import { Button } from './ui/button';
@@ -105,6 +109,48 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     linkedin: 'https://linkedin.com',
   });
   const [settingsSaved, setSettingsSaved] = useState(false);
+
+  const PROFILE_PIC_KEY = 'portfolio_profile_pic_url';
+  const [profilePicUrl, setProfilePicUrl] = useState<string | null>(() => localStorage.getItem(PROFILE_PIC_KEY));
+  const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file.');
+      return;
+    }
+    setUploadState('uploading');
+    setUploadError(null);
+    try {
+      const res = await fetch('/api/storage/uploads/request-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!res.ok) throw new Error('Failed to get upload URL');
+      const { uploadURL, objectPath } = await res.json();
+      const putRes = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      if (!putRes.ok) throw new Error('Upload to storage failed');
+      const publicUrl = `/api/storage/objects${objectPath}`;
+      localStorage.setItem(PROFILE_PIC_KEY, publicUrl);
+      setProfilePicUrl(publicUrl);
+      window.dispatchEvent(new Event('profile-pic-updated'));
+      setUploadState('done');
+      setTimeout(() => setUploadState('idle'), 3000);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+      setUploadState('error');
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleAddProject = () => {
     if (newProject.title && newProject.description) {
@@ -601,6 +647,69 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               </div>
 
               <div className="max-w-2xl space-y-6">
+                {/* Profile Picture Upload */}
+                <Card className="bg-slate-900/50 border-slate-800">
+                  <CardHeader>
+                    <CardTitle className="text-white">Profile Picture</CardTitle>
+                    <CardDescription>Upload a photo to display in the hero section of your portfolio</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-6">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-800 border-2 border-slate-700 flex items-center justify-center shrink-0">
+                        {profilePicUrl ? (
+                          <img src={profilePicUrl} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-10 h-10 text-slate-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleProfilePicUpload}
+                        />
+                        <Button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadState === 'uploading'}
+                          className={
+                            uploadState === 'done'
+                              ? 'bg-green-600 hover:bg-green-700 w-full'
+                              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 w-full'
+                          }
+                        >
+                          {uploadState === 'uploading' ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</>
+                          ) : uploadState === 'done' ? (
+                            <><CheckCircle className="w-4 h-4 mr-2" />Photo Updated!</>
+                          ) : (
+                            <><Upload className="w-4 h-4 mr-2" />{profilePicUrl ? 'Change Photo' : 'Upload Photo'}</>
+                          )}
+                        </Button>
+                        {profilePicUrl && uploadState !== 'uploading' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-slate-400 hover:text-red-400"
+                            onClick={() => {
+                              localStorage.removeItem(PROFILE_PIC_KEY);
+                              setProfilePicUrl(null);
+                              window.dispatchEvent(new Event('profile-pic-updated'));
+                            }}
+                          >
+                            Remove photo
+                          </Button>
+                        )}
+                        {uploadError && (
+                          <p className="text-red-400 text-sm">{uploadError}</p>
+                        )}
+                        <p className="text-slate-500 text-xs">Supports JPG, PNG, WebP. Recommended: 400×400px or larger.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <Card className="bg-slate-900/50 border-slate-800">
                   <CardHeader>
                     <CardTitle className="text-white">Profile Information</CardTitle>

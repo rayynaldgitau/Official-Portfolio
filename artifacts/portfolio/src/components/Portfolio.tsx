@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import {
   Terminal,
@@ -16,12 +16,43 @@ import {
   GraduationCap,
   ChevronRight,
   Menu,
-  X
+  X,
+  User
 } from 'lucide-react';
 import ContactForm from './ContactForm';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
+
+const PROFILE_PIC_KEY = 'portfolio_profile_pic_url';
+
+function ProfilePicture() {
+  const [url, setUrl] = useState<string | null>(() => localStorage.getItem(PROFILE_PIC_KEY));
+
+  useEffect(() => {
+    const handler = () => setUrl(localStorage.getItem(PROFILE_PIC_KEY));
+    window.addEventListener('profile-pic-updated', handler);
+    return () => window.removeEventListener('profile-pic-updated', handler);
+  }, []);
+
+  if (!url) return null;
+
+  return (
+    <motion.div
+      className="flex justify-center mb-6"
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 200, delay: 0.15 }}
+    >
+      <div className="relative">
+        <div className="w-32 h-32 rounded-full ring-4 ring-cyan-400/50 ring-offset-4 ring-offset-slate-950 overflow-hidden shadow-lg shadow-cyan-500/20">
+          <img src={url} alt="Raynald Gitau" className="w-full h-full object-cover" />
+        </div>
+        <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-950" title="Available for work" />
+      </div>
+    </motion.div>
+  );
+}
 
 const skills = [
   { name: 'Docker', icon: Container, level: 95, category: 'containerization' },
@@ -238,6 +269,9 @@ export default function Portfolio() {
                 DevOps Engineer
               </Badge>
             </motion.div>
+
+            {/* Profile Picture */}
+            <ProfilePicture />
 
             <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
               Raynald Gitau

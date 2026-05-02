@@ -38,3 +38,14 @@ export interface SendMessageResponse {
 export interface ErrorResponse {
   error: string;
 }
+
+export interface RequestUploadUrlBody {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+}

@@ -16,6 +16,20 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
+ * @summary Request a presigned upload URL
+ */
+export const RequestUploadUrlBody = zod.object({
+  name: zod.string(),
+  size: zod.number(),
+  contentType: zod.string(),
+});
+
+export const RequestUploadUrlResponse = zod.object({
+  uploadURL: zod.string(),
+  objectPath: zod.string(),
+});
+
+/**
  * Submits a contact form message from the portfolio
  * @summary Send a contact message
  */

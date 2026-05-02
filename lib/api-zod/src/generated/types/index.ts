@@ -10,5 +10,7 @@ export * from "./errorResponse";
 export * from "./getMessagesResponse";
 export * from "./healthStatus";
 export * from "./messageItem";
+export * from "./requestUploadUrlBody";
+export * from "./requestUploadUrlResponse";
 export * from "./sendMessageRequest";
 export * from "./sendMessageResponse";
