@@ -142,10 +142,19 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [settingsSaved, setSettingsSaved] = useState(false);
 
   const PROFILE_PIC_KEY = 'portfolio_profile_pic_url';
+  const RESUME_KEY = 'portfolio_resume_url';
+  const RESUME_NAME_KEY = 'portfolio_resume_name';
+
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(() => localStorage.getItem(PROFILE_PIC_KEY));
   const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [resumeUrl, setResumeUrl] = useState<string | null>(() => localStorage.getItem(RESUME_KEY));
+  const [resumeName, setResumeName] = useState<string | null>(() => localStorage.getItem(RESUME_NAME_KEY));
+  const [resumeUploadState, setResumeUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+  const [resumeUploadError, setResumeUploadError] = useState<string | null>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -181,6 +190,45 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       setUploadState('error');
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowed.includes(file.type)) {
+      setResumeUploadError('Please select a PDF or Word document.');
+      return;
+    }
+    setResumeUploadState('uploading');
+    setResumeUploadError(null);
+    try {
+      const res = await fetch('/api/storage/uploads/request-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!res.ok) throw new Error('Failed to get upload URL');
+      const { uploadURL, objectPath } = await res.json();
+      const putRes = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      if (!putRes.ok) throw new Error('Upload to storage failed');
+      const publicUrl = `/api/storage/objects${objectPath}`;
+      localStorage.setItem(RESUME_KEY, publicUrl);
+      localStorage.setItem(RESUME_NAME_KEY, file.name);
+      setResumeUrl(publicUrl);
+      setResumeName(file.name);
+      window.dispatchEvent(new Event('resume-updated'));
+      setResumeUploadState('done');
+      setTimeout(() => setResumeUploadState('idle'), 3000);
+    } catch (err) {
+      setResumeUploadError(err instanceof Error ? err.message : 'Upload failed');
+      setResumeUploadState('error');
+    }
+    if (resumeInputRef.current) resumeInputRef.current.value = '';
   };
 
   const handleAddProject = () => {
@@ -764,6 +812,70 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                     <div>
                       <Label className="text-white">Bio</Label>
                       <Textarea value={profileSettings.bio} onChange={(e) => setProfileSettings({ ...profileSettings, bio: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" rows={3} />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Resume Upload */}
+                <Card className="bg-slate-900/50 border-slate-800">
+                  <CardHeader>
+                    <CardTitle className="text-white">Resume</CardTitle>
+                    <CardDescription>Upload your resume — it will be available for download from the portfolio navbar</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 rounded-lg bg-slate-800 border-2 border-slate-700 flex items-center justify-center shrink-0">
+                        <FileText className="w-8 h-8 text-slate-400" />
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <input
+                          ref={resumeInputRef}
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          className="hidden"
+                          onChange={handleResumeUpload}
+                        />
+                        {resumeName && (
+                          <p className="text-sm text-slate-300 truncate">Current: <span className="text-cyan-400">{resumeName}</span></p>
+                        )}
+                        <Button
+                          onClick={() => resumeInputRef.current?.click()}
+                          disabled={resumeUploadState === 'uploading'}
+                          className={
+                            resumeUploadState === 'done'
+                              ? 'bg-green-600 hover:bg-green-700 w-full'
+                              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 w-full'
+                          }
+                        >
+                          {resumeUploadState === 'uploading' ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</>
+                          ) : resumeUploadState === 'done' ? (
+                            <><CheckCircle className="w-4 h-4 mr-2" />Resume Uploaded!</>
+                          ) : (
+                            <><Upload className="w-4 h-4 mr-2" />{resumeUrl ? 'Replace Resume' : 'Upload Resume'}</>
+                          )}
+                        </Button>
+                        {resumeUrl && resumeUploadState !== 'uploading' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-slate-400 hover:text-red-400"
+                            onClick={() => {
+                              localStorage.removeItem(RESUME_KEY);
+                              localStorage.removeItem(RESUME_NAME_KEY);
+                              setResumeUrl(null);
+                              setResumeName(null);
+                              window.dispatchEvent(new Event('resume-updated'));
+                            }}
+                          >
+                            Remove resume
+                          </Button>
+                        )}
+                        {resumeUploadError && (
+                          <p className="text-red-400 text-sm">{resumeUploadError}</p>
+                        )}
+                        <p className="text-slate-500 text-xs">Supports PDF, DOC, DOCX.</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

@@ -27,6 +27,8 @@ import { Badge } from './ui/badge';
 const PROFILE_PIC_KEY = 'portfolio_profile_pic_url';
 const PROJECTS_KEY = 'portfolio_projects';
 const SKILLS_KEY = 'portfolio_skills';
+const RESUME_KEY = 'portfolio_resume_url';
+const RESUME_NAME_KEY = 'portfolio_resume_name';
 
 interface StoredProject {
   id: number;
@@ -169,6 +171,8 @@ export default function Portfolio() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [portfolioProjects, setPortfolioProjects] = useState<StoredProject[]>(loadPortfolioProjects);
   const [portfolioSkills, setPortfolioSkills] = useState<StoredSkill[]>(loadPortfolioSkills);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(() => localStorage.getItem(RESUME_KEY));
+  const [resumeFileName, setResumeFileName] = useState<string | null>(() => localStorage.getItem(RESUME_NAME_KEY));
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -179,11 +183,17 @@ export default function Portfolio() {
   useEffect(() => {
     const handleProjectsUpdate = () => setPortfolioProjects(loadPortfolioProjects());
     const handleSkillsUpdate = () => setPortfolioSkills(loadPortfolioSkills());
+    const handleResumeUpdate = () => {
+      setResumeUrl(localStorage.getItem(RESUME_KEY));
+      setResumeFileName(localStorage.getItem(RESUME_NAME_KEY));
+    };
     window.addEventListener('portfolio-projects-updated', handleProjectsUpdate);
     window.addEventListener('portfolio-skills-updated', handleSkillsUpdate);
+    window.addEventListener('resume-updated', handleResumeUpdate);
     return () => {
       window.removeEventListener('portfolio-projects-updated', handleProjectsUpdate);
       window.removeEventListener('portfolio-skills-updated', handleSkillsUpdate);
+      window.removeEventListener('resume-updated', handleResumeUpdate);
     };
   }, []);
 
@@ -232,7 +242,17 @@ export default function Portfolio() {
               variant="outline"
               size="sm"
               className="border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-950"
-              onClick={() => alert('Resume download would be available here.')}
+              onClick={() => {
+                if (resumeUrl) {
+                  const a = document.createElement('a');
+                  a.href = resumeUrl;
+                  a.download = resumeFileName || 'resume';
+                  a.click();
+                } else {
+                  alert('No resume uploaded yet. Go to the admin dashboard → Settings to upload your resume.');
+                }
+              }}
+              title={resumeUrl ? `Download ${resumeFileName}` : 'No resume uploaded yet'}
             >
               Resume
             </Button>
