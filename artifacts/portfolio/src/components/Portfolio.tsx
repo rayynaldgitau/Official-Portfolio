@@ -391,10 +391,7 @@ export default function Portfolio() {
             className="flex items-center gap-2"
             whileHover={{ scale: 1.05 }}
           >
-            <Terminal className="w-6 h-6 text-cyan-400" />
-            <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-              RG
-            </span>
+            <img src="/logo.png" alt="RG Logo" className="h-10 w-auto" />
           </motion.button>
 
           <div className="hidden md:flex items-center gap-8">
