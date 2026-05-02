@@ -328,6 +328,7 @@ export default function Portfolio() {
   const [certifications, setCertifications] = useState<StoredCert[]>(loadCerts);
   const [aboutData, setAboutData] = useState<AboutData>(loadAbout);
   const [selectedProject, setSelectedProject] = useState<{ project: StoredProject; idx: number } | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => localStorage.getItem('portfolio_logo_url'));
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -347,6 +348,7 @@ export default function Portfolio() {
     const handleExperienceUpdate = () => setExperience(loadExperience());
     const handleCertsUpdate = () => setCertifications(loadCerts());
     const handleAboutUpdate = () => setAboutData(loadAbout());
+    const handleLogoUpdate = () => setLogoUrl(localStorage.getItem('portfolio_logo_url'));
     window.addEventListener('portfolio-projects-updated', handleProjectsUpdate);
     window.addEventListener('portfolio-skills-updated', handleSkillsUpdate);
     window.addEventListener('resume-updated', handleResumeUpdate);
@@ -355,6 +357,7 @@ export default function Portfolio() {
     window.addEventListener('experience-updated', handleExperienceUpdate);
     window.addEventListener('certs-updated', handleCertsUpdate);
     window.addEventListener('about-updated', handleAboutUpdate);
+    window.addEventListener('logo-updated', handleLogoUpdate);
     return () => {
       window.removeEventListener('portfolio-projects-updated', handleProjectsUpdate);
       window.removeEventListener('portfolio-skills-updated', handleSkillsUpdate);
@@ -364,6 +367,7 @@ export default function Portfolio() {
       window.removeEventListener('experience-updated', handleExperienceUpdate);
       window.removeEventListener('certs-updated', handleCertsUpdate);
       window.removeEventListener('about-updated', handleAboutUpdate);
+      window.removeEventListener('logo-updated', handleLogoUpdate);
     };
   }, []);
 
@@ -391,7 +395,7 @@ export default function Portfolio() {
             className="flex items-center gap-2"
             whileHover={{ scale: 1.05 }}
           >
-            <img src="/logo.png" alt="RG Logo" className="h-10 w-auto" />
+            <img src={logoUrl || '/logo.png'} alt="RG Logo" className="h-10 w-auto" />
           </motion.button>
 
           <div className="hidden md:flex items-center gap-8">

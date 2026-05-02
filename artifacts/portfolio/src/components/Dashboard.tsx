@@ -379,6 +379,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   }, [profileSettings]);
 
   const PROFILE_PIC_KEY = 'portfolio_profile_pic_url';
+  const LOGO_KEY = 'portfolio_logo_url';
   const RESUME_KEY = 'portfolio_resume_url';
   const RESUME_NAME_KEY = 'portfolio_resume_name';
 
@@ -397,11 +398,52 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => localStorage.getItem(LOGO_KEY));
+  const [logoUploadState, setLogoUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
+  const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
   const [resumeUrl, setResumeUrl] = useState<string | null>(() => localStorage.getItem(RESUME_KEY));
   const [resumeName, setResumeName] = useState<string | null>(() => localStorage.getItem(RESUME_NAME_KEY));
   const [resumeUploadState, setResumeUploadState] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle');
   const [resumeUploadError, setResumeUploadError] = useState<string | null>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setLogoUploadError('Please select an image file.');
+      return;
+    }
+    setLogoUploadState('uploading');
+    setLogoUploadError(null);
+    try {
+      const res = await fetch('/api/storage/uploads/request-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!res.ok) throw new Error('Failed to get upload URL');
+      const { uploadURL, objectPath } = await res.json();
+      const putRes = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      if (!putRes.ok) throw new Error('Upload to storage failed');
+      const publicUrl = `/api/storage/objects${objectPath}`;
+      localStorage.setItem(LOGO_KEY, publicUrl);
+      setLogoUrl(publicUrl);
+      window.dispatchEvent(new Event('logo-updated'));
+      setLogoUploadState('done');
+      setTimeout(() => setLogoUploadState('idle'), 3000);
+    } catch (err) {
+      setLogoUploadError(err instanceof Error ? err.message : 'Upload failed');
+      setLogoUploadState('error');
+    }
+    if (logoInputRef.current) logoInputRef.current.value = '';
+  };
 
   const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1526,6 +1568,69 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                           {syncMessage}
                         </p>
                       )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Logo Upload */}
+                <Card className="bg-slate-900/50 border-slate-800">
+                  <CardHeader>
+                    <CardTitle className="text-white">Site Logo</CardTitle>
+                    <CardDescription>Upload the logo shown in the top-left of your portfolio navbar</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-6">
+                      <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-800 border-2 border-slate-700 flex items-center justify-center shrink-0 p-2">
+                        {logoUrl ? (
+                          <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                        ) : (
+                          <img src="/logo.png" alt="Default Logo" className="w-full h-full object-contain opacity-60" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <input
+                          ref={logoInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                        />
+                        <Button
+                          onClick={() => logoInputRef.current?.click()}
+                          disabled={logoUploadState === 'uploading'}
+                          className={
+                            logoUploadState === 'done'
+                              ? 'bg-green-600 hover:bg-green-700 w-full'
+                              : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 w-full'
+                          }
+                        >
+                          {logoUploadState === 'uploading' ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</>
+                          ) : logoUploadState === 'done' ? (
+                            <><CheckCircle className="w-4 h-4 mr-2" />Logo Updated!</>
+                          ) : (
+                            <><Upload className="w-4 h-4 mr-2" />{logoUrl ? 'Change Logo' : 'Upload Logo'}</>
+                          )}
+                        </Button>
+                        {logoUrl && logoUploadState !== 'uploading' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-slate-400 hover:text-red-400"
+                            onClick={() => {
+                              localStorage.removeItem(LOGO_KEY);
+                              setLogoUrl(null);
+                              window.dispatchEvent(new Event('logo-updated'));
+                            }}
+                          >
+                            Revert to default logo
+                          </Button>
+                        )}
+                        {logoUploadError && (
+                          <p className="text-red-400 text-sm">{logoUploadError}</p>
+                        )}
+                        <p className="text-slate-500 text-xs">Supports PNG, SVG, WebP. Use a transparent background for best results.</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
