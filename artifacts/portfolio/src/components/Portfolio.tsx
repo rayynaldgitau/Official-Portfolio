@@ -35,20 +35,24 @@ function ProfilePicture() {
     return () => window.removeEventListener('profile-pic-updated', handler);
   }, []);
 
-  if (!url) return null;
-
   return (
     <motion.div
-      className="flex justify-center mb-6"
+      className="flex justify-center mb-8"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, delay: 0.15 }}
     >
       <div className="relative">
-        <div className="w-32 h-32 rounded-full ring-4 ring-cyan-400/50 ring-offset-4 ring-offset-slate-950 overflow-hidden shadow-lg shadow-cyan-500/20">
-          <img src={url} alt="Raynald Gitau" className="w-full h-full object-cover" />
+        <div className="w-36 h-36 rounded-full ring-4 ring-cyan-400/60 ring-offset-4 ring-offset-slate-950 overflow-hidden shadow-2xl shadow-cyan-500/30 bg-slate-800 flex items-center justify-center">
+          {url ? (
+            <img src={url} alt="Raynald Gitau" className="w-full h-full object-cover" />
+          ) : (
+            <div className="flex flex-col items-center gap-1 text-slate-500">
+              <User className="w-14 h-14" />
+            </div>
+          )}
         </div>
-        <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-950" title="Available for work" />
+        <span className="absolute bottom-2 right-2 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-950 shadow-md" title="Available for work" />
       </div>
     </motion.div>
   );
