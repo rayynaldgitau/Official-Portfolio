@@ -25,6 +25,60 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Badge } from './ui/badge';
 
 const PROFILE_PIC_KEY = 'portfolio_profile_pic_url';
+const PROJECTS_KEY = 'portfolio_projects';
+const SKILLS_KEY = 'portfolio_skills';
+
+interface StoredProject {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  tags: string[];
+  views: number;
+}
+
+interface StoredSkill {
+  id: number;
+  name: string;
+  level: number;
+  category: string;
+}
+
+const DEFAULT_PORTFOLIO_PROJECTS: StoredProject[] = [
+  { id: 1, title: 'Cloud Infrastructure Automation', description: 'Automated AWS infrastructure deployment using Terraform and GitHub Actions, reducing deployment time by 70%.', status: 'active', tags: ['Terraform', 'AWS', 'CI/CD'], views: 1247 },
+  { id: 2, title: 'Kubernetes Cluster Management', description: 'Designed and maintained production-grade K8s clusters serving 10M+ requests daily with auto-scaling capabilities.', status: 'completed', tags: ['Kubernetes', 'Docker', 'Monitoring'], views: 892 },
+  { id: 3, title: 'CI/CD Pipeline Optimization', description: 'Engineered comprehensive CI/CD pipelines with Jenkins and GitLab, achieving 50% faster build times.', status: 'active', tags: ['Jenkins', 'GitLab', 'Python'], views: 634 },
+  { id: 4, title: 'Monitoring & Observability Stack', description: 'Implemented comprehensive monitoring with Prometheus, Grafana, and ELK stack for real-time insights.', status: 'active', tags: ['Prometheus', 'Grafana', 'ELK'], views: 521 },
+];
+
+const DEFAULT_PORTFOLIO_SKILLS: StoredSkill[] = [
+  { id: 1, name: 'Docker', level: 95, category: 'Containerization' },
+  { id: 2, name: 'Kubernetes', level: 90, category: 'Orchestration' },
+  { id: 3, name: 'AWS', level: 92, category: 'Cloud' },
+  { id: 4, name: 'Jenkins', level: 88, category: 'CI/CD' },
+  { id: 5, name: 'Terraform', level: 85, category: 'IaC' },
+  { id: 6, name: 'PostgreSQL', level: 87, category: 'Database' },
+  { id: 7, name: 'Python', level: 90, category: 'Programming' },
+  { id: 8, name: 'Ansible', level: 83, category: 'Automation' },
+];
+
+function loadPortfolioProjects(): StoredProject[] {
+  try {
+    const stored = localStorage.getItem(PROJECTS_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_PORTFOLIO_PROJECTS;
+  } catch {
+    return DEFAULT_PORTFOLIO_PROJECTS;
+  }
+}
+
+function loadPortfolioSkills(): StoredSkill[] {
+  try {
+    const stored = localStorage.getItem(SKILLS_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_PORTFOLIO_SKILLS;
+  } catch {
+    return DEFAULT_PORTFOLIO_SKILLS;
+  }
+}
 
 function ProfilePicture() {
   const [url, setUrl] = useState<string | null>(() => localStorage.getItem(PROFILE_PIC_KEY));
@@ -58,59 +112,26 @@ function ProfilePicture() {
   );
 }
 
-const skills = [
-  { name: 'Docker', icon: Container, level: 95, category: 'containerization' },
-  { name: 'Kubernetes', icon: Server, level: 90, category: 'orchestration' },
-  { name: 'AWS', icon: Cloud, level: 92, category: 'cloud' },
-  { name: 'Jenkins', icon: GitBranch, level: 88, category: 'ci-cd' },
-  { name: 'Terraform', icon: Code, level: 85, category: 'iac' },
-  { name: 'PostgreSQL', icon: Database, level: 87, category: 'database' },
-  { name: 'Python', icon: Terminal, level: 90, category: 'programming' },
-  { name: 'Ansible', icon: Server, level: 83, category: 'automation' },
+const PROJECT_IMAGES = [
+  'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1607799279861-4dd421887fb3?w=800&auto=format&fit=crop&q=80',
 ];
 
-const projects = [
-  {
-    id: 1,
-    title: 'Cloud Infrastructure Automation',
-    description: 'Automated AWS infrastructure deployment using Terraform and GitHub Actions, reducing deployment time by 70%.',
-    image: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=800&auto=format&fit=crop&q=80',
-    tags: ['Terraform', 'AWS', 'CI/CD'],
-    metrics: { deployments: '500+', uptime: '99.9%' },
-    github: '#',
-    live: '#'
-  },
-  {
-    id: 2,
-    title: 'Kubernetes Cluster Management',
-    description: 'Designed and maintained production-grade K8s clusters serving 10M+ requests daily with auto-scaling capabilities.',
-    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
-    tags: ['Kubernetes', 'Docker', 'Monitoring'],
-    metrics: { pods: '200+', nodes: '15' },
-    github: '#',
-    live: '#'
-  },
-  {
-    id: 3,
-    title: 'CI/CD Pipeline Optimization',
-    description: 'Engineered comprehensive CI/CD pipelines with Jenkins and GitLab, achieving 50% faster build times.',
-    image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80',
-    tags: ['Jenkins', 'GitLab', 'Python'],
-    metrics: { builds: '1000+/month', success: '98%' },
-    github: '#',
-    live: '#'
-  },
-  {
-    id: 4,
-    title: 'Monitoring & Observability Stack',
-    description: 'Implemented comprehensive monitoring with Prometheus, Grafana, and ELK stack for real-time insights.',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-    tags: ['Prometheus', 'Grafana', 'ELK'],
-    metrics: { metrics: '5000+', alerts: '50+' },
-    github: '#',
-    live: '#'
-  }
-];
+function getSkillIcon(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes('docker') || n.includes('container')) return Container;
+  if (n.includes('kubernetes') || n.includes('k8s')) return Server;
+  if (n.includes('aws') || n.includes('azure') || n.includes('gcp') || n.includes('cloud')) return Cloud;
+  if (n.includes('jenkins') || n.includes('gitlab') || n.includes('github') || n.includes('git')) return GitBranch;
+  if (n.includes('terraform') || n.includes('ansible') || n.includes('puppet') || n.includes('chef')) return Code;
+  if (n.includes('postgres') || n.includes('mysql') || n.includes('mongo') || n.includes('database') || n.includes('sql')) return Database;
+  if (n.includes('python') || n.includes('bash') || n.includes('script') || n.includes('terminal')) return Terminal;
+  return Server;
+}
 
 const experience = [
   {
@@ -146,11 +167,24 @@ const certifications = [
 export default function Portfolio() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [portfolioProjects, setPortfolioProjects] = useState<StoredProject[]>(loadPortfolioProjects);
+  const [portfolioSkills, setPortfolioSkills] = useState<StoredSkill[]>(loadPortfolioSkills);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleProjectsUpdate = () => setPortfolioProjects(loadPortfolioProjects());
+    const handleSkillsUpdate = () => setPortfolioSkills(loadPortfolioSkills());
+    window.addEventListener('portfolio-projects-updated', handleProjectsUpdate);
+    window.addEventListener('portfolio-skills-updated', handleSkillsUpdate);
+    return () => {
+      window.removeEventListener('portfolio-projects-updated', handleProjectsUpdate);
+      window.removeEventListener('portfolio-skills-updated', handleSkillsUpdate);
+    };
   }, []);
 
   const scrollTo = (id: string) => {
@@ -443,37 +477,40 @@ export default function Portfolio() {
             </p>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {skills.map((skill, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                >
-                  <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/50 transition-all">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                          <skill.icon className="w-5 h-5 text-cyan-400" />
+              {portfolioSkills.map((skill, idx) => {
+                const SkillIcon = getSkillIcon(skill.name);
+                return (
+                  <motion.div
+                    key={skill.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ scale: 1.05, y: -5 }}
+                  >
+                    <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/50 transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                            <SkillIcon className="w-5 h-5 text-cyan-400" />
+                          </div>
+                          <h3 className="font-semibold text-white">{skill.name}</h3>
                         </div>
-                        <h3 className="font-semibold text-white">{skill.name}</h3>
-                      </div>
-                      <div className="w-full bg-slate-800 rounded-full h-2 mb-2">
-                        <motion.div
-                          className="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full"
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${skill.level}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1, delay: idx * 0.1 }}
-                        />
-                      </div>
-                      <p className="text-xs text-slate-400 text-right">{skill.level}%</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                        <div className="w-full bg-slate-800 rounded-full h-2 mb-2">
+                          <motion.div
+                            className="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full"
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${skill.level}%` }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1, delay: idx * 0.1 }}
+                          />
+                        </div>
+                        <p className="text-xs text-slate-400 text-right">{skill.level}%</p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         </div>
@@ -496,7 +533,7 @@ export default function Portfolio() {
             </p>
 
             <div className="grid md:grid-cols-2 gap-8">
-              {projects.map((project, idx) => (
+              {portfolioProjects.map((project, idx) => (
                 <motion.div
                   key={project.id}
                   initial={{ opacity: 0, y: 30 }}
@@ -507,25 +544,11 @@ export default function Portfolio() {
                   <Card className="bg-slate-900/50 border-slate-800 hover:border-cyan-400/50 transition-all overflow-hidden group h-full">
                     <div className="relative h-48 overflow-hidden">
                       <img
-                        src={project.image}
+                        src={PROJECT_IMAGES[idx % PROJECT_IMAGES.length]}
                         alt={project.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
-                      <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <a
-                          href={project.github}
-                          className="w-8 h-8 rounded-full bg-slate-900/80 flex items-center justify-center hover:bg-slate-800"
-                        >
-                          <Github className="w-4 h-4 text-white" />
-                        </a>
-                        <a
-                          href={project.live}
-                          className="w-8 h-8 rounded-full bg-slate-900/80 flex items-center justify-center hover:bg-slate-800"
-                        >
-                          <ExternalLink className="w-4 h-4 text-cyan-400" />
-                        </a>
-                      </div>
                     </div>
                     <CardHeader>
                       <CardTitle className="text-xl text-white flex items-center justify-between">
@@ -542,13 +565,9 @@ export default function Portfolio() {
                           </Badge>
                         ))}
                       </div>
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
-                        {Object.entries(project.metrics).map(([key, value]) => (
-                          <div key={key}>
-                            <p className="text-2xl font-bold text-cyan-400">{value}</p>
-                            <p className="text-xs text-slate-500 uppercase">{key}</p>
-                          </div>
-                        ))}
+                      <div className="flex items-center gap-2 pt-4 border-t border-slate-800 text-sm text-slate-400">
+                        <span className={`w-2 h-2 rounded-full ${project.status === 'active' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                        {project.status === 'active' ? 'Active' : 'Completed'} · {project.views} views
                       </div>
                     </CardContent>
                   </Card>

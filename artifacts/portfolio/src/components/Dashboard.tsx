@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   LayoutDashboard,
@@ -59,14 +59,14 @@ interface Skill {
   category: string;
 }
 
-const initialProjects: Project[] = [
+const DEFAULT_PROJECTS: Project[] = [
   { id: 1, title: 'Cloud Infrastructure Automation', description: 'Automated AWS infrastructure deployment using Terraform', status: 'active', tags: ['Terraform', 'AWS', 'CI/CD'], views: 1247 },
   { id: 2, title: 'Kubernetes Cluster Management', description: 'Production-grade K8s clusters with auto-scaling', status: 'completed', tags: ['Kubernetes', 'Docker'], views: 892 },
   { id: 3, title: 'CI/CD Pipeline Optimization', description: 'Comprehensive CI/CD pipelines with Jenkins', status: 'active', tags: ['Jenkins', 'GitLab'], views: 634 },
   { id: 4, title: 'Monitoring & Observability Stack', description: 'Prometheus, Grafana, and ELK stack for real-time insights', status: 'active', tags: ['Prometheus', 'Grafana', 'ELK'], views: 521 },
 ];
 
-const initialSkills: Skill[] = [
+const DEFAULT_SKILLS: Skill[] = [
   { id: 1, name: 'Docker', level: 95, category: 'Containerization' },
   { id: 2, name: 'Kubernetes', level: 90, category: 'Orchestration' },
   { id: 3, name: 'AWS', level: 92, category: 'Cloud' },
@@ -76,6 +76,27 @@ const initialSkills: Skill[] = [
   { id: 7, name: 'Python', level: 90, category: 'Programming' },
   { id: 8, name: 'Ansible', level: 83, category: 'Automation' },
 ];
+
+const PROJECTS_KEY = 'portfolio_projects';
+const SKILLS_KEY = 'portfolio_skills';
+
+function loadProjects(): Project[] {
+  try {
+    const stored = localStorage.getItem(PROJECTS_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_PROJECTS;
+  } catch {
+    return DEFAULT_PROJECTS;
+  }
+}
+
+function loadSkills(): Skill[] {
+  try {
+    const stored = localStorage.getItem(SKILLS_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_SKILLS;
+  } catch {
+    return DEFAULT_SKILLS;
+  }
+}
 
 const recentActivity = [
   { action: 'Updated project', target: 'Cloud Infrastructure Automation', time: '2 hours ago' },
@@ -91,14 +112,24 @@ interface DashboardProps {
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [skills, setSkills] = useState<Skill[]>(initialSkills);
+  const [projects, setProjects] = useState<Project[]>(loadProjects);
+  const [skills, setSkills] = useState<Skill[]>(loadSkills);
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   const [newProject, setNewProject] = useState({ title: '', description: '', tags: '' });
   const [newSkill, setNewSkill] = useState({ name: '', level: '80', category: '' });
+
+  useEffect(() => {
+    localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+    window.dispatchEvent(new Event('portfolio-projects-updated'));
+  }, [projects]);
+
+  useEffect(() => {
+    localStorage.setItem(SKILLS_KEY, JSON.stringify(skills));
+    window.dispatchEvent(new Event('portfolio-skills-updated'));
+  }, [skills]);
 
   const [profileSettings, setProfileSettings] = useState({
     name: 'Raynald Gitau',
