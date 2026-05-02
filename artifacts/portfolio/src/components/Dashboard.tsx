@@ -61,6 +61,7 @@ const DEFAULT_PROFILE = {
   title: 'DevOps Engineer',
   bio: 'Building resilient infrastructure and automating the future.',
   university: 'United States International University Africa',
+  currentCompany: '',
   github: 'https://github.com',
   linkedin: 'https://linkedin.com',
 };
@@ -885,6 +886,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                     <div>
                       <Label className="text-white">Email</Label>
                       <Input value={profileSettings.email} onChange={(e) => setProfileSettings({ ...profileSettings, email: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" type="email" />
+                    </div>
+                    <div>
+                      <Label className="text-white">Currently Working At</Label>
+                      <Input value={profileSettings.currentCompany ?? ''} onChange={(e) => setProfileSettings({ ...profileSettings, currentCompany: e.target.value })} className="bg-slate-800 border-slate-700 mt-1 text-white" placeholder="e.g. Google, Microsoft, Self-employed..." />
                     </div>
                     <div>
                       <Label className="text-white">University / School</Label>

@@ -24,6 +24,7 @@ import {
   Instagram,
   Facebook,
   Link,
+  Building2,
 } from 'lucide-react';
 import ContactForm from './ContactForm';
 import { Button } from './ui/button';
@@ -44,6 +45,7 @@ const DEFAULT_PROFILE = {
   title: 'DevOps Engineer',
   bio: 'Building resilient infrastructure and automating the future.',
   university: 'United States International University Africa',
+  currentCompany: '',
 };
 
 function loadProfile() {
@@ -408,9 +410,17 @@ export default function Portfolio() {
               {profile.bio}
             </p>
 
-            <div className="flex items-center justify-center gap-2 text-slate-400 mb-8">
-              <GraduationCap className="w-5 h-5" />
-              <p className="text-sm">{profile.university}</p>
+            <div className="flex flex-col items-center gap-2 mb-8">
+              {profile.currentCompany && (
+                <div className="flex items-center gap-2 bg-cyan-500/10 border border-cyan-400/30 rounded-full px-4 py-1.5">
+                  <Building2 className="w-4 h-4 text-cyan-400" />
+                  <p className="text-sm text-cyan-300 font-medium">Currently at {profile.currentCompany}</p>
+                </div>
+              )}
+              <div className="flex items-center gap-2 text-slate-400">
+                <GraduationCap className="w-4 h-4" />
+                <p className="text-sm">{profile.university}</p>
+              </div>
             </div>
 
             <div className="flex items-center justify-center gap-4 mb-12 flex-wrap">
