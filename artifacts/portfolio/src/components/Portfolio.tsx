@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useSpring, useInView } from 'motion/react';
 import {
   Terminal,
   Server,
@@ -315,6 +315,64 @@ function loadAbout(): AboutData {
   }
 }
 
+function useTypewriter(text: string, speed = 35, startDelay = 900) {
+  const [displayed, setDisplayed] = useState('');
+  useEffect(() => {
+    setDisplayed('');
+    const timeout = setTimeout(() => {
+      let i = 0;
+      const interval = setInterval(() => {
+        i++;
+        setDisplayed(text.slice(0, i));
+        if (i >= text.length) clearInterval(interval);
+      }, speed);
+      return () => clearInterval(interval);
+    }, startDelay);
+    return () => clearTimeout(timeout);
+  }, [text, speed, startDelay]);
+  return displayed;
+}
+
+function parseStatNum(val: string): { num: number; suffix: string } {
+  const m = val.match(/^([\d.]+)(.*)$/);
+  return m ? { num: parseFloat(m[1]), suffix: m[2] } : { num: NaN, suffix: val };
+}
+
+function AnimatedCounter({ value }: { value: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-50px' });
+  const { num, suffix } = parseStatNum(value);
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (!inView || isNaN(num)) return;
+    const duration = 1600;
+    let start: number | null = null;
+    const tick = (ts: number) => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(eased * num * 10) / 10);
+      if (p < 1) requestAnimationFrame(tick);
+      else setDisplay(num);
+    };
+    requestAnimationFrame(tick);
+  }, [inView, num]);
+  if (isNaN(num)) return <span ref={ref}>{value}</span>;
+  const formatted = Number.isInteger(num) ? Math.round(display).toString() : display.toFixed(1);
+  return <span ref={ref}>{formatted}{suffix}</span>;
+}
+
+const TERMINAL_CMDS = [
+  'kubectl apply -f deployment.yaml',
+  'docker build -t app:latest .',
+  'terraform apply --auto-approve',
+  'git push origin main',
+  'helm upgrade --install app ./chart',
+  'ansible-playbook deploy.yml',
+  'aws eks update-kubeconfig --name prod',
+  'systemctl restart nginx',
+];
+
 export default function Portfolio() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -329,6 +387,9 @@ export default function Portfolio() {
   const [aboutData, setAboutData] = useState<AboutData>(loadAbout);
   const [selectedProject, setSelectedProject] = useState<{ project: StoredProject; idx: number } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(() => localStorage.getItem('portfolio_logo_url'));
+  const { scrollYProgress } = useScroll();
+  const progressScaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  const typedBio = useTypewriter(profile.bio);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -380,6 +441,11 @@ export default function Portfolio() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+      {/* Scroll progress bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 z-[200] origin-left"
+        style={{ scaleX: progressScaleX }}
+      />
       {/* Navigation */}
       <motion.nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -459,24 +525,57 @@ export default function Portfolio() {
       {/* Hero Section */}
       <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-blue-500/10" />
-        <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Glowing orbs */}
+          {[
+            { w: 400, h: 400, bg: '#22d3ee', left: '5%', top: '10%', dx: [0, 40, -20, 0], dy: [0, -30, 40, 0], dur: 14 },
+            { w: 320, h: 320, bg: '#3b82f6', left: '70%', top: '5%', dx: [0, -30, 20, 0], dy: [0, 40, -25, 0], dur: 18 },
+            { w: 250, h: 250, bg: '#06b6d4', left: '85%', top: '55%', dx: [0, 20, -40, 0], dy: [0, -20, 30, 0], dur: 12 },
+            { w: 200, h: 200, bg: '#6366f1', left: '15%', top: '65%', dx: [0, -25, 35, 0], dy: [0, 30, -15, 0], dur: 16 },
+            { w: 180, h: 180, bg: '#22d3ee', left: '50%', top: '80%', dx: [0, 30, -10, 0], dy: [0, -40, 20, 0], dur: 20 },
+          ].map((orb, i) => (
             <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-cyan-400/30 rounded-full"
+              key={`orb-${i}`}
+              className="absolute rounded-full blur-[80px] opacity-[0.07]"
+              style={{ width: orb.w, height: orb.h, background: orb.bg, left: orb.left, top: orb.top }}
+              animate={{ x: orb.dx, y: orb.dy, scale: [1, 1.08, 0.97, 1] }}
+              transition={{ duration: orb.dur, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+          {/* Floating terminal commands */}
+          {TERMINAL_CMDS.map((cmd, i) => (
+            <motion.div
+              key={`cmd-${i}`}
+              className="absolute font-mono text-xs text-cyan-400/20 whitespace-nowrap pointer-events-none select-none"
+              style={{
+                left: `${(i * 13 + 3) % 85}%`,
+                top: `${(i * 19 + 8) % 90}%`,
+              }}
+              animate={{
+                opacity: [0, 0.25, 0.1, 0.25, 0],
+                y: [0, -18, 0],
+              }}
+              transition={{
+                duration: 6 + i * 1.5,
+                repeat: Infinity,
+                delay: i * 0.9,
+                ease: 'easeInOut',
+              }}
+            >
+              $ {cmd}
+            </motion.div>
+          ))}
+          {/* Small twinkling dots */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={`dot-${i}`}
+              className="absolute w-1 h-1 bg-cyan-400/40 rounded-full"
               style={{
                 left: `${(i * 17 + 5) % 100}%`,
                 top: `${(i * 23 + 10) % 100}%`,
               }}
-              animate={{
-                opacity: [0.3, 0.8, 0.3],
-                scale: [1, 1.5, 1],
-              }}
-              transition={{
-                duration: 3 + (i % 3),
-                repeat: Infinity,
-                delay: (i % 5) * 0.4,
-              }}
+              animate={{ opacity: [0.2, 0.7, 0.2], scale: [1, 1.6, 1] }}
+              transition={{ duration: 3 + (i % 3), repeat: Infinity, delay: (i % 5) * 0.4 }}
             />
           ))}
         </div>
@@ -506,8 +605,13 @@ export default function Portfolio() {
               {profile.name}
             </h1>
 
-            <p className="text-xl md:text-2xl text-slate-300 mb-4 max-w-3xl mx-auto">
-              {profile.bio}
+            <p className="text-xl md:text-2xl text-slate-300 mb-4 max-w-3xl mx-auto min-h-[1.8em]">
+              {typedBio}
+              <motion.span
+                className="inline-block w-[2px] h-5 bg-cyan-400 ml-0.5 align-middle"
+                animate={{ opacity: [1, 0, 1] }}
+                transition={{ duration: 0.75, repeat: Infinity }}
+              />
             </p>
 
             <div className="flex flex-col items-center gap-2 mb-8">
@@ -608,7 +712,7 @@ export default function Portfolio() {
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.15 }}
                 >
-                  <p className="text-4xl md:text-5xl font-bold text-cyan-400">{stat.value}</p>
+                  <p className="text-4xl md:text-5xl font-bold text-cyan-400"><AnimatedCounter value={stat.value} /></p>
                   <p className="text-sm text-slate-400 mt-1">{stat.label}</p>
                 </motion.div>
               ))}
