@@ -284,6 +284,29 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [newCert, setNewCert] = useState({ name: '', issuer: '', year: '', url: '' });
   const [editingCert, setEditingCert] = useState<Cert | null>(null);
 
+  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  const handleSyncGitHub = async () => {
+    setSyncState('syncing');
+    setSyncMessage(null);
+    try {
+      const res = await fetch('/api/sync/github', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setSyncState('success');
+        setSyncMessage('Pushed to GitHub successfully!');
+      } else {
+        setSyncState('error');
+        setSyncMessage(data.error || 'Push failed.');
+      }
+    } catch {
+      setSyncState('error');
+      setSyncMessage('Network error — could not reach the server.');
+    }
+    setTimeout(() => { setSyncState('idle'); setSyncMessage(null); }, 5000);
+  };
+
   useEffect(() => {
     localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
     window.dispatchEvent(new Event('portfolio-projects-updated'));
@@ -1226,6 +1249,41 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               </div>
 
               <div className="max-w-2xl space-y-6">
+                {/* GitHub Sync */}
+                <Card className="bg-slate-900/50 border-slate-800">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Github className="w-5 h-5 text-slate-300" />
+                      GitHub Sync
+                    </CardTitle>
+                    <CardDescription>Push the latest portfolio changes to your GitHub repository</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <Button
+                        onClick={handleSyncGitHub}
+                        disabled={syncState === 'syncing'}
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white"
+                      >
+                        {syncState === 'syncing' ? (
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Pushing…</>
+                        ) : syncState === 'success' ? (
+                          <><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Pushed!</>
+                        ) : syncState === 'error' ? (
+                          <><X className="w-4 h-4 mr-2 text-red-400" /> Failed</>
+                        ) : (
+                          <><Github className="w-4 h-4 mr-2" /> Push to GitHub</>
+                        )}
+                      </Button>
+                      {syncMessage && (
+                        <p className={`text-sm ${syncState === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                          {syncMessage}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Profile Picture Upload */}
                 <Card className="bg-slate-900/50 border-slate-800">
                   <CardHeader>
