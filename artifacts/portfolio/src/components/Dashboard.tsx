@@ -20,7 +20,13 @@ import { Label } from './ui/label';
 const API = import.meta.env.VITE_API_URL ?? '';
 
 async function apiFetch(path: string, options?: RequestInit) {
-  const res = await fetch(`${API}/api${path}`, { headers: { 'Content-Type': 'application/json' }, ...options });
+  const res = await fetch(`${API}/api${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+    },
+    ...options,
+  });
   if (res.status === 204) return null;
   return res.json();
 }
