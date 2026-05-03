@@ -25,4 +25,5 @@ router.use(profileRouter);
 router.use(socialLinksRouter);
 router.use(aboutRouter);
 
-export default router;
+export default router; 
+// fixed the export statement to be compatible with ESNext module system
