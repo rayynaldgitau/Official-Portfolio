@@ -1,29 +1,22 @@
-import { Router, type IRouter } from "express";
-import healthRouter from "./health";
-import messagesRouter from "./messages";
-import storageRouter from "./storage";
-import syncRouter from "./sync";
-import projectsRouter from "./projects";
-import skillsRouter from "./skills";
-import experienceRouter from "./experience";
-import certificationsRouter from "./certifications";
-import profileRouter from "./profile";
-import socialLinksRouter from "./social-links";
-import aboutRouter from "./about";
+import app from "./app";
+import { logger } from "./lib/logger";
 
-const router: IRouter = Router();
+const rawPort = process.env["PORT"];
 
-router.use(healthRouter);
-router.use(messagesRouter);
-router.use(storageRouter);
-router.use(syncRouter);
-router.use(projectsRouter);
-router.use(skillsRouter);
-router.use(experienceRouter);
-router.use(certificationsRouter);
-router.use(profileRouter);
-router.use(socialLinksRouter);
-router.use(aboutRouter);
+if (!rawPort) {
+  throw new Error("PORT environment variable is required but was not provided.");
+}
 
-export default router; 
-// fixed the export statement to be compatible with ESNext module system
+const port = Number(rawPort);
+
+if (Number.isNaN(port) || port <= 0) {
+  throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+app.listen(port, (err) => {
+  if (err) {
+    logger.error({ err }, "Error listening on port");
+    process.exit(1);
+  }
+  logger.info({ port }, "Server listening");
+});
