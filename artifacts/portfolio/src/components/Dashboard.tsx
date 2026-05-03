@@ -144,89 +144,114 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
   const handleAddProject = async () => {
     if (!newProject.title || !newProject.description) return;
-    const row = await apiFetch('/projects', { method: 'POST', body: JSON.stringify({ title: newProject.title, description: newProject.description, status: 'active', tags: newProject.tags.split(',').map(t => t.trim()).filter(Boolean), views: 0, url: newProject.url || null }) });
-    setProjects(p => [...p, row]); setNewProject({ title: '', description: '', tags: '', url: '' }); setIsAddingProject(false);
+    await apiFetch('/projects', { method: 'POST', body: JSON.stringify({ title: newProject.title, description: newProject.description, status: 'active', tags: newProject.tags.split(',').map(t => t.trim()).filter(Boolean), views: 0, url: newProject.url || null }) });
+    setNewProject({ title: '', description: '', tags: '', url: '' });
+    setIsAddingProject(false);
+    await loadAll();
   };
 
   const handleUpdateProject = async () => {
     if (!editingProject) return;
-    const row = await apiFetch(`/projects/${editingProject.id}`, { method: 'PUT', body: JSON.stringify(editingProject) });
-    setProjects(p => p.map(x => x.id === row.id ? row : x)); setEditingProject(null);
+    await apiFetch(`/projects/${editingProject.id}`, { method: 'PUT', body: JSON.stringify(editingProject) });
+    setEditingProject(null);
+    await loadAll();
   };
 
   const handleDeleteProject = async (id: number) => {
-    await apiFetch(`/projects/${id}`, { method: 'DELETE' }); setProjects(p => p.filter(x => x.id !== id));
+    await apiFetch(`/projects/${id}`, { method: 'DELETE' });
+    await loadAll();
   };
 
   const handleAddSkill = async () => {
     if (!newSkill.name) return;
-    const row = await apiFetch('/skills', { method: 'POST', body: JSON.stringify({ name: newSkill.name, level: parseInt(newSkill.level) || 80, category: newSkill.category }) });
-    setSkills(s => [...s, row]); setNewSkill({ name: '', level: '80', category: '' }); setIsAddingSkill(false);
+    await apiFetch('/skills', { method: 'POST', body: JSON.stringify({ name: newSkill.name, level: parseInt(newSkill.level) || 80, category: newSkill.category }) });
+    setNewSkill({ name: '', level: '80', category: '' });
+    setIsAddingSkill(false);
+    await loadAll();
   };
 
   const handleUpdateSkill = async () => {
     if (!editingSkill) return;
-    const row = await apiFetch(`/skills/${editingSkill.id}`, { method: 'PUT', body: JSON.stringify(editingSkill) });
-    setSkills(s => s.map(x => x.id === row.id ? row : x)); setEditingSkill(null);
+    await apiFetch(`/skills/${editingSkill.id}`, { method: 'PUT', body: JSON.stringify(editingSkill) });
+    setEditingSkill(null);
+    await loadAll();
   };
 
   const handleDeleteSkill = async (id: number) => {
-    await apiFetch(`/skills/${id}`, { method: 'DELETE' }); setSkills(s => s.filter(x => x.id !== id));
+    await apiFetch(`/skills/${id}`, { method: 'DELETE' });
+    await loadAll();
   };
 
   const handleAddExp = async () => {
     if (!newExp.role || !newExp.company) return;
-    const row = await apiFetch('/experience', { method: 'POST', body: JSON.stringify({ ...newExp, endDate: newExp.current ? '' : newExp.endDate, achievements: newExp.achievements.split('\n').map(a => a.trim()).filter(Boolean) }) });
-    setExperiences(e => [...e, row]); setNewExp({ role: '', company: '', location: '', startDate: '', endDate: '', current: false, description: '', achievements: '' }); setIsAddingExp(false);
+    await apiFetch('/experience', { method: 'POST', body: JSON.stringify({ ...newExp, endDate: newExp.current ? '' : newExp.endDate, achievements: newExp.achievements.split('\n').map(a => a.trim()).filter(Boolean) }) });
+    setNewExp({ role: '', company: '', location: '', startDate: '', endDate: '', current: false, description: '', achievements: '' });
+    setIsAddingExp(false);
+    await loadAll();
   };
 
   const handleUpdateExp = async () => {
     if (!editingExp) return;
-    const row = await apiFetch(`/experience/${editingExp.id}`, { method: 'PUT', body: JSON.stringify({ ...editingExp, achievements: editingExp.achievements.map(a => a.trim()).filter(Boolean) }) });
-    setExperiences(e => e.map(x => x.id === row.id ? row : x)); setEditingExp(null);
+    await apiFetch(`/experience/${editingExp.id}`, { method: 'PUT', body: JSON.stringify({ ...editingExp, achievements: editingExp.achievements.map(a => a.trim()).filter(Boolean) }) });
+    setEditingExp(null);
+    await loadAll();
   };
 
   const handleDeleteExp = async (id: number) => {
-    await apiFetch(`/experience/${id}`, { method: 'DELETE' }); setExperiences(e => e.filter(x => x.id !== id));
+    await apiFetch(`/experience/${id}`, { method: 'DELETE' });
+    await loadAll();
   };
 
   const handleAddCert = async () => {
     if (!newCert.name || !newCert.issuer) return;
-    const row = await apiFetch('/certifications', { method: 'POST', body: JSON.stringify(newCert) });
-    setCerts(c => [...c, row]); setNewCert({ name: '', issuer: '', year: '', url: '' }); setIsAddingCert(false);
+    await apiFetch('/certifications', { method: 'POST', body: JSON.stringify(newCert) });
+    setNewCert({ name: '', issuer: '', year: '', url: '' });
+    setIsAddingCert(false);
+    await loadAll();
   };
 
   const handleUpdateCert = async () => {
     if (!editingCert) return;
-    const row = await apiFetch(`/certifications/${editingCert.id}`, { method: 'PUT', body: JSON.stringify(editingCert) });
-    setCerts(c => c.map(x => x.id === row.id ? row : x)); setEditingCert(null);
+    await apiFetch(`/certifications/${editingCert.id}`, { method: 'PUT', body: JSON.stringify(editingCert) });
+    setEditingCert(null);
+    await loadAll();
   };
 
   const handleDeleteCert = async (id: number) => {
-    await apiFetch(`/certifications/${id}`, { method: 'DELETE' }); setCerts(c => c.filter(x => x.id !== id));
+    await apiFetch(`/certifications/${id}`, { method: 'DELETE' });
+    await loadAll();
   };
 
   const handleAddSocial = async () => {
     if (!newSocial.url) return;
-    const row = await apiFetch('/social-links', { method: 'POST', body: JSON.stringify(newSocial) });
-    setSocialLinks(s => [...s, row]); setNewSocial({ platform: 'github', label: 'GitHub', url: '' }); setIsAddingSocial(false);
+    await apiFetch('/social-links', { method: 'POST', body: JSON.stringify(newSocial) });
+    setNewSocial({ platform: 'github', label: 'GitHub', url: '' });
+    setIsAddingSocial(false);
+    await loadAll();
   };
 
   const handleUpdateSocial = async () => {
     if (!editingSocial) return;
-    const row = await apiFetch(`/social-links/${editingSocial.id}`, { method: 'PUT', body: JSON.stringify(editingSocial) });
-    setSocialLinks(s => s.map(x => x.id === row.id ? row : x)); setEditingSocial(null);
+    await apiFetch(`/social-links/${editingSocial.id}`, { method: 'PUT', body: JSON.stringify(editingSocial) });
+    setEditingSocial(null);
+    await loadAll();
   };
 
   const handleDeleteSocial = async (id: number) => {
-    await apiFetch(`/social-links/${id}`, { method: 'DELETE' }); setSocialLinks(s => s.filter(x => x.id !== id));
+    await apiFetch(`/social-links/${id}`, { method: 'DELETE' });
+    await loadAll();
   };
 
-  const handleSaveAbout = async () => { await apiFetch('/about', { method: 'POST', body: JSON.stringify(aboutData) }); };
+  const handleSaveAbout = async () => {
+    await apiFetch('/about', { method: 'POST', body: JSON.stringify(aboutData) });
+    await loadAll();
+  };
 
   const handleSaveSettings = async () => {
     await apiFetch('/profile', { method: 'POST', body: JSON.stringify(profileSettings) });
-    setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000);
+    await loadAll();
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 2000);
   };
 
   const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,6 +269,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     window.dispatchEvent(new Event('profile-pic-updated'));
     setUploadState('done'); setTimeout(() => setUploadState('idle'), 3000);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    await loadAll();
   };
 
   const menuItems = [
