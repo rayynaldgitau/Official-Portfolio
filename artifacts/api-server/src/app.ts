@@ -30,6 +30,8 @@ app.use(cors({
   origin: [
     'https://raynald.dev',
     'http://localhost:5173',
+    'http://official-portfolio-portfolio-git-8c3eb2-rayynaldgitaus-projects.vercel.app',
+    'http://official-portfolio-portfolio-t3ut-iep9qsmiz.vercel.app'
   ],
   credentials: true,
 }));
