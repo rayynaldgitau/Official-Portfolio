@@ -14,7 +14,7 @@ export default function App() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') {
+    if (password === import.meta.env.VITE_ADMIN_PASSWORD) {
       setView('dashboard');
       setError('');
     } else {
@@ -28,7 +28,7 @@ export default function App() {
         <Portfolio />
         <button
           onClick={() => setView('login')}
-          className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg flex items-center justify-center z-50 transition-transform hover:scale-110"
+          className="fixed bottom-8 right-8 w-14 h-14 rounded-full z-50"
           title="Admin Login"
         >
           <Lock className="w-6 h-6 text-white" />
