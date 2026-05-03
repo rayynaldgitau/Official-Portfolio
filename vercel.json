@@ -1,0 +1,12 @@
+{
+  "buildCommand": "pnpm --filter @workspace/portfolio exec vite build --config vite.config.ts",
+  "outputDirectory": "artifacts/portfolio/dist/public",
+  "installCommand": "pnpm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
