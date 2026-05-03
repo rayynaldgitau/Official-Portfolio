@@ -31,7 +31,7 @@ export default function App() {
           className="fixed bottom-8 right-8 w-14 h-14 rounded-full z-50"
           title="Admin Login"
         >
-          <Lock className="w-6 h-6 text-white" />
+          
         </button>
       </div>
     );
